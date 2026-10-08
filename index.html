@@ -156,6 +156,25 @@ body.learning .quiz-only{display:none!important}
 .cramnum{font-family:var(--mono);font-size:.78rem;color:var(--accent)}
 .cramwhy{color:var(--muted);font-size:.86rem}
 @media(max-width:560px){.cramrow{grid-template-columns:1fr}}
+
+.visbox{margin-top:10px;padding:8px;background:var(--surface);border:1px solid var(--line);border-radius:8px}
+.vis{width:100%;max-width:620px;height:auto;display:block;font-family:var(--body);font-size:13px}
+.vis .ln{fill:none;stroke:var(--ink);stroke-width:2;stroke-linejoin:round;stroke-linecap:round}
+.vis .ac{stroke:var(--accent)} .vis .gd{stroke:var(--good)} .vis .bd{stroke:var(--bad)}
+.vis .mu{fill:none;stroke:var(--muted);stroke-width:1.3;stroke-dasharray:4 4}
+.vis .mu2{stroke:var(--muted);stroke-width:1.4}
+.vis text{fill:var(--ink)} .vis .lab{fill:var(--muted);font-size:12px} .vis .key{font-weight:700} .vis .keyw{font-weight:700;fill:var(--accent-ink)}
+.vis .gdt{fill:var(--good);font-weight:600;font-size:12px} .vis .bdt{fill:var(--bad);font-weight:600;font-size:12px}
+.vis .big{font-family:var(--display);font-size:28px;font-weight:700} .vis .bigsup{font-family:var(--display);font-size:16px;font-weight:700;fill:var(--accent)}
+.vis .box{fill:var(--surface-2);stroke:var(--line)} .vis .acbox{fill:var(--accent);stroke:var(--accent)} .vis .gapt{fill:var(--accent-ink);font-family:var(--display);font-size:22px;font-weight:700}
+.vis .gdbox{fill:var(--good-soft);stroke:var(--good)} .vis .bdbox{fill:var(--bad-soft);stroke:var(--bad)}
+.vis .ring1{fill:var(--surface-2);stroke:var(--line)} .vis .ring2{fill:color-mix(in srgb,var(--ink) 18%,var(--surface));stroke:var(--line)}
+.vis .ring3{fill:var(--accent-soft);stroke:var(--line)} .vis .ring4{fill:color-mix(in srgb,var(--ink) 32%,var(--surface));stroke:var(--line)}
+.vis .core{fill:var(--surface);stroke:var(--accent);stroke-width:2.5} .vis .wlab{font-family:var(--mono);font-size:11px;letter-spacing:.1em;fill:var(--ink)} .vis .wcore{font-family:var(--mono);font-size:13px;font-weight:700;fill:var(--accent);letter-spacing:.1em}
+.vis .vbar{stroke:none} .vis .vup{fill:var(--good)} .vis .vdn{fill:var(--bad)}
+.vis .chollow{fill:var(--surface);stroke:var(--ink);stroke-width:2} .vis .cfill{fill:var(--ink);stroke:var(--ink);stroke-width:2}
+.vis .pnfc{font-family:var(--mono);font-size:14px;font-weight:600;fill:var(--ink)}
+.vis .mark{fill:none;stroke-width:2.5} .vis .gdm{stroke:var(--good)} .vis .hl{fill:var(--bad-soft);stroke:var(--bad);stroke-dasharray:3 3;opacity:.8}
 .foot{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:0 32px;font-size:.8rem;color:var(--muted);text-align:center}
 @media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
 @media(max-width:560px){.lopts{grid-template-columns:1fr}.ltiles{grid-template-columns:repeat(2,1fr)}.lsum ul{columns:1}.q{grid-template-columns:1fr}.qn{padding:0}}
@@ -552,6 +571,129 @@ const Q = [
 {ch:8,t:"num",q:"Apple's 50-day SMA is $172.48 and the 50-day standard deviation of price is $5.355. What is the upper Bollinger Band at 2 standard deviations? (two decimals)",a:183.19,tol:0.02,u:"$",x:"172.48 + 2 × 5.355 = <b>$183.19</b>, matching the chart. The lower band is 172.48 − 10.71 = $161.77."},
 ];
 
+// ===================== VISUALS: schematic diagrams shown in explanations =====================
+const VIS=(()=>{
+const S=(w,h,inner)=>`<svg class="vis" viewBox="0 0 ${w} ${h}" role="img" aria-hidden="true">${inner}</svg>`;
+const P=pts=>pts.map((p,i)=>(i?"L":"M")+p[0].toFixed(1)+" "+p[1].toFixed(1)).join(" ");
+const L=(pts,cls="ln")=>`<path class="${cls}" d="${P(pts)}"/>`;
+const T=(x,y,s,cls="",extra="")=>`<text x="${x}" y="${y}" class="${cls}" ${extra}>${s}</text>`;
+const H=(x1,x2,y,cls="mu")=>`<path class="${cls}" d="M${x1} ${y}L${x2} ${y}"/>`;
+const zig=(x0,y0,n,dx,up,amp,dy)=>{const o=[[x0,y0]];let x=x0,y=y0;for(let i=0;i<n;i++){x+=dx;y+=(i%2?amp:-amp*0.4)*(up?1:-1)-dy;o.push([x,y])}return o};
+const V={};
+V.wheel=()=>S(620,330,`<defs><clipPath id="wt"><rect x="0" y="0" width="620" height="165"/></clipPath></defs>
+<circle cx="310" cy="165" r="135" class="ring2"/><circle cx="310" cy="165" r="135" class="ring1" clip-path="url(#wt)"/>
+<circle cx="310" cy="165" r="92" class="ring4"/><circle cx="310" cy="165" r="92" class="ring3" clip-path="url(#wt)"/>
+<circle cx="310" cy="165" r="44" class="core"/>${H(175,445,165,"ln")}
+${T(310,60,"MACRO","wlab","text-anchor=\"middle\"")}${T(310,110,"FUNDAMENTAL","wlab","text-anchor=\"middle\"")}${T(310,170,"IDEA","wcore","text-anchor=\"middle\"")}
+${T(310,232,"TECHNICAL","wlab","text-anchor=\"middle\"")}${T(310,282,"SENTIMENT","wlab","text-anchor=\"middle\"")}
+${T(12,80,"EXPECTATIONS","key")}${T(12,98,"how the market","lab")}${T(12,114,"should be acting","lab")}${L([[150,70],[160,70],[160,150],[150,150]],"mu")}
+${T(470,215,"TIMING","key")}${T(470,233,"how the market","lab")}${T(470,249,"is acting","lab")}${L([[462,180],[452,180],[452,262],[462,262]],"mu")}`);
+V.cvs=()=>S(620,330,`<circle cx="310" cy="165" r="140" class="box"/>${H(170,450,165,"ln")}
+${T(310,62,"The Company","key","text-anchor=\"middle\"")}${T(230,100,"Competition")}${T(340,100,"Products")}${T(215,130,"P/E ratio")}${T(350,130,"Management")}${T(290,155,"Dividends")}
+${T(310,200,"The Stock","key","text-anchor=\"middle\"")}${T(220,228,"Price")}${T(300,228,"Volume")}${T(380,228,"Open interest")}${T(225,256,"Supply & demand")}${T(360,256,"Psychology")}
+${T(310,318,"Phil Roth: fundamentalist thinks they are the same; technician thinks they are different","lab","text-anchor=\"middle\"")}`);
+V.gap=()=>S(620,220,`<rect x="20" y="70" width="170" height="80" rx="6" class="box"/>${T(105,100,"Intrinsic Value","key","text-anchor=\"middle\"")}${T(105,120,"accounting estimates","lab","text-anchor=\"middle\"")}${T(105,136,"valuation estimates","lab","text-anchor=\"middle\"")}
+<rect x="225" y="55" width="170" height="110" rx="6" class="acbox"/>${T(310,116,"THE GAP","gapt","text-anchor=\"middle\"")}
+<rect x="430" y="70" width="170" height="80" rx="6" class="box"/>${T(515,100,"Price","key","text-anchor=\"middle\"")}${T(515,120,"sentiment","lab","text-anchor=\"middle\"")}${T(515,136,"supply & demand","lab","text-anchor=\"middle\"")}
+${L([[192,110],[222,110]],"ln")}${L([[428,110],[398,110]],"ln")}${T(310,200,"Technical analysis supplies the tools to navigate the gap","lab","text-anchor=\"middle\"")}`);
+V.pvs=()=>S(620,200,`${T(310,48,"P = (F × V)","big","text-anchor=\"middle\"")}${T(372,34,"S","bigsup")}
+<rect x="30" y="80" width="170" height="90" rx="6" class="gdbox"/>${T(115,108,"Bull market","key","text-anchor=\"middle\"")}${T(115,132,"S is a whole number","lab","text-anchor=\"middle\"")}${T(115,150,"above 1","lab","text-anchor=\"middle\"")}
+<rect x="225" y="80" width="170" height="90" rx="6" class="box"/>${T(310,108,"Perfectly rational","key","text-anchor=\"middle\"")}${T(310,132,"S = 1","lab","text-anchor=\"middle\"")}${T(310,150,"hardly ever achieved","lab","text-anchor=\"middle\"")}
+<rect x="420" y="80" width="170" height="90" rx="6" class="bdbox"/>${T(505,108,"Bear market","key","text-anchor=\"middle\"")}${T(505,132,"S is a fraction","lab","text-anchor=\"middle\"")}${T(505,150,"between 0 and 1","lab","text-anchor=\"middle\"")}`);
+V.phases=()=>{const pts=[[30,250],[110,240],[180,215],[260,150],[330,80],[400,60],[460,75],[520,140],[570,220],[600,255]];return S(620,300,`${L(pts,"ln ac")}
+${T(70,275,"Accumulation","lab","text-anchor=\"middle\"")}${T(220,275,"Public participation","lab","text-anchor=\"middle\"")}${T(360,275,"Excess / distribution","lab","text-anchor=\"middle\"")}
+${T(430,42,"Distribution","lab","text-anchor=\"middle\"")}${T(545,110,"Public participation","lab")}${T(545,128,"/ panic","lab")}${T(540,250,"Despair","lab")}
+${H(30,600,260)}${T(40,30,"Bull: accumulation → public participation → excess","key")}${T(40,50,"Bear: distribution → public participation/panic → despair","key")}`)};
+V.trends=()=>{const p=[[30,270],[90,190],[120,230],[180,150],[215,195],[280,110],[320,160],[390,70],[430,120],[500,40]];const sub=[[90,190],[93,186],[96,192],[99,185],[102,191],[105,186]];return S(620,300,`${L([[30,270],[500,40]],"mu")}${L(p,"ln ac")}
+${L([[280,110],[320,160]],"ln bd")}${T(330,150,"Secondary: counter-trend,","lab")}${T(330,166,"retraces 33–66%","lab")}${T(330,182,"(50% typical)","lab")}
+${T(520,46,"Primary trend","key")}${T(520,64,"a year or more","lab")}${L([[185,150],[190,146],[195,152],[200,147],[206,153],[211,148]],"ln gd")}${T(140,120,"Minor: days to weeks (noise)","lab")}`)};
+V.confirm=()=>{const a=[[30,120],[70,90],[100,110],[140,70],[170,95],[210,55]];const b=[[30,230],[70,200],[100,220],[140,180],[170,205],[210,165]];const c=[[340,120],[380,90],[410,110],[450,70],[480,95],[520,55]];const d=[[340,230],[380,200],[410,220],[450,180],[480,205],[520,195]];return S(620,280,`${T(30,30,"Confirmation","key")}${L(a,"ln")}${L(b,"ln")}${H(140,215,70)}${H(140,215,180)}${T(220,60,"new high","lab")}${T(220,170,"new high","lab")}${T(30,262,"Industrials and transports both close above prior highs","lab")}
+${L([[300,20],[300,270]],"mu")}
+${T(340,30,"Non-confirmation","key")}${L(c,"ln")}${L(d,"ln bd")}${H(450,525,70)}${H(450,525,180)}${T(530,60,"new high","lab")}${T(530,200,"fails","lab")}${T(340,262,"One breaks out, the other does not: divergence, caution","lab")}`)};
+V.volume=()=>{const p=[[30,150],[100,80],[140,110],[220,40],[260,75],[340,20]];let bars="";const vols=[[30,100,60],[100,140,25],[140,220,70],[220,260,28],[260,340,80]];vols.forEach(([x1,x2,h])=>{bars+=`<rect x="${x1+4}" y="${270-h}" width="${x2-x1-8}" height="${h}" class="vbar ${h>50?"vup":"vdn"}"/>`});return S(620,290,`${L(p,"ln ac")}${bars}${H(30,350,270)}
+${T(380,60,"Uptrend","key")}${T(380,82,"Volume rises on advances,","lab")}${T(380,98,"falls on pullbacks","lab")}${T(380,130,"Volume confirms the trend.","lab")}${T(380,146,"It is secondary: price and","lab")}${T(380,162,"confirmation override it.","lab")}${T(380,194,"Weak volume on a breakout","lab")}${T(380,210,"= limited conviction","lab")}`)};
+V.crowd=()=>S(620,230,`<rect x="30" y="40" width="250" height="56" rx="6" class="box"/>${T(155,74,"Increasing optimism","key","text-anchor=\"middle\"")}${L([[285,68],[335,68]],"ln")}<rect x="340" y="40" width="250" height="56" rx="6" class="bdbox"/>${T(465,74,"Falling liquidity (cash)","key","text-anchor=\"middle\"")}
+<rect x="30" y="120" width="250" height="56" rx="6" class="box"/>${T(155,154,"Rising pessimism","key","text-anchor=\"middle\"")}${L([[285,148],[335,148]],"ln")}<rect x="340" y="120" width="250" height="56" rx="6" class="gdbox"/>${T(465,154,"Rising liquidity (cash)","key","text-anchor=\"middle\"")}
+${T(310,212,"Top = maximum optimism, low cash. Bottom = maximum pessimism, high cash. Liquidity is the shock absorber.","lab","text-anchor=\"middle\"")}`);
+V.biastree=()=>S(620,330,`<rect x="10" y="130" width="110" height="50" rx="6" class="acbox"/>${T(65,160,"Behavioral biases","keyw","text-anchor=\"middle\"")}
+<rect x="150" y="60" width="90" height="40" rx="6" class="box"/>${T(195,85,"Cognitive","key","text-anchor=\"middle\"")}<rect x="150" y="230" width="90" height="40" rx="6" class="box"/>${T(195,255,"Emotional","key","text-anchor=\"middle\"")}
+${L([[120,155],[135,155],[135,80],[150,80]],"ln")}${L([[135,155],[135,250],[150,250]],"ln")}
+<rect x="270" y="20" width="150" height="46" rx="6" class="box"/>${T(345,40,"Belief perseverance","key","text-anchor=\"middle\"")}${T(345,58,"hold on to beliefs","lab","text-anchor=\"middle\"")}
+<rect x="270" y="100" width="150" height="46" rx="6" class="box"/>${T(345,120,"Processing errors","key","text-anchor=\"middle\"")}${T(345,138,"handle data badly","lab","text-anchor=\"middle\"")}
+${L([[240,80],[255,80],[255,43],[270,43]],"ln")}${L([[255,80],[255,123],[270,123]],"ln")}${L([[240,250],[270,250]],"ln")}
+${T(435,28,"Conservatism","lab")}${T(435,42,"Confirmation","lab")}${T(435,56,"Representativeness","lab")}${T(435,70,"Illusion of control","lab")}${T(435,84,"Hindsight","lab")}
+${T(435,108,"Anchoring","lab")}${T(435,122,"Mental accounting","lab")}${T(435,136,"Framing","lab")}${T(435,150,"Availability","lab")}${T(435,164,"Recency","lab")}
+${T(285,228,"Loss aversion","lab")}${T(285,242,"Overconfidence","lab")}${T(285,256,"Self-control","lab")}${T(400,228,"Status quo","lab")}${T(400,242,"Endowment","lab")}${T(400,256,"Regret aversion","lab")}
+${T(150,300,"Cognitive: fixable with information and education. Emotional: harder, they come from feelings.","lab")}`);
+V.prospect=()=>S(620,300,`${L([[60,150],[560,150]],"mu")}${L([[310,20],[310,280]],"mu")}
+<path class="ln ac" d="M310 150 C 360 100, 420 80, 560 70"/><path class="ln bd" d="M310 150 C 290 190, 230 250, 90 275"/>
+${T(560,142,"Gains","lab","text-anchor=\"end\"")}${T(70,142,"Losses","lab")}${T(320,32,"Value","lab")}${T(320,172,"Reference point","lab")}
+${T(400,120,"Gains: positive value at a","lab")}${T(400,136,"diminishing rate","lab")}${T(100,210,"Losses: steeper, more powerful","lab")}${T(100,226,"(about 2× the pain of an equal gain)","lab")}`);
+V.breakeven=()=>{const pts=[];for(let p=0.16;p<=0.9;p+=0.02){const r=(1-p)/p;pts.push([60+(p-0.15)/0.75*500,270-Math.min(r,5.5)/6*240])}return S(620,300,`${L([[60,30],[60,270],[560,270]],"mu")}${L(pts,"ln")}
+${T(300,292,"% winners →","lab","text-anchor=\"middle\"")}${T(14,150,"profit ratio ↑","lab","transform=\"rotate(-90 14 150)\"")}
+${T(380,110,"Profitable systems","gdt")}${T(380,128,"above the curve","lab")}${T(110,250,"Unprofitable","bdt")}${T(110,266,"below the curve","lab")}
+${T(330,70,"Breakeven: win% × avg win = loss% × avg loss","lab")}${T(330,88,"A 40% winner needs a 1.5:1 payoff just to break even","lab")}`)};
+V.ohlc=()=>S(620,260,`${L([[150,40],[150,220]],"ln")}${L([[130,150],[150,150]],"ln")}${L([[150,80],[170,80]],"ln")}
+${T(100,154,"Open","key","text-anchor=\"end\"")}${T(95,170,"left tick","lab","text-anchor=\"end\"")}${T(180,84,"Close","key")}${T(180,100,"right tick","lab")}${T(165,44,"High","lab")}${T(165,226,"Low","lab")}
+${L([[210,40],[220,40],[220,220],[210,220]],"mu")}${T(230,134,"Range = high − low","lab")}
+${L([[400,60],[400,200]],"ln")}${L([[400,120],[420,120]],"ln")}${T(430,124,"HLC bar: no open tick","lab")}${T(430,150,"The open is optional on a bar,","lab")}${T(430,166,"always present on a candle","lab")}`);
+V.candle=()=>S(620,280,`${L([[110,40],[110,230]],"ln")}<rect x="90" y="90" width="40" height="100" class="chollow"/>${T(110,255,"Hollow","key","text-anchor=\"middle\"")}${T(110,271,"close above open","lab","text-anchor=\"middle\"")}${T(140,92,"close","lab")}${T(140,192,"open","lab")}
+${L([[290,40],[290,230]],"ln")}<rect x="270" y="90" width="40" height="100" class="cfill"/>${T(290,255,"Filled","key","text-anchor=\"middle\"")}${T(290,271,"close below open","lab","text-anchor=\"middle\"")}${T(320,92,"open","lab")}${T(320,192,"close","lab")}
+${L([[470,40],[470,230]],"ln")}${L([[450,138],[490,138]],"ln")}${T(470,255,"Doji","key","text-anchor=\"middle\"")}${T(470,271,"open ≈ close","lab","text-anchor=\"middle\"")}
+${T(500,60,"upper shadow (wick)","lab")}${T(500,220,"lower shadow","lab")}${T(500,140,"real body = open to close","lab")}`);
+V.scale=()=>{const ar=[];const lg=[];for(let i=0;i<=10;i++){const v=Math.pow(1.35,i);ar.push([40+i*22,250-(v-1)/19*200]);lg.push([340+i*22,250-i*20])}return S(620,290,`${T(40,30,"Arithmetic scale","key")}${L(ar,"ln ac")}${L([[40,250],[150,225]],"mu")}${L([[150,225],[220,140]],"mu")}${L([[220,140],[260,50]],"mu")}${T(40,275,"Same % moves look bigger and bigger; needs several trend lines","lab")}
+${L([[310,20],[310,280]],"mu")}${T(340,30,"Logarithmic scale","key")}${L(lg,"ln ac")}${L([[340,250],[560,50]],"mu")}${T(340,275,"Equal % change = equal distance; one straight trend line","lab")}`)};
+V.equivol=()=>{const bx=[[30,60,160,220],[95,30,140,200],[130,90,100,150],[225,40,120,170],[270,70,60,130],[345,110,80,160]];let r="";bx.forEach(([x,w,y1,y2],i)=>{r+=`<rect x="${x}" y="${y1}" width="${w}" height="${y2-y1}" class="${i%2?"cfill":"chollow"}"/>`});return S(620,280,`${r}${H(30,430,250)}${T(470,80,"Width = volume","key")}${T(470,100,"Height = low to high","key")}${T(470,130,"Black: close above","lab")}${T(470,146,"prior close","lab")}${T(470,166,"Red: close below","lab")}${T(470,200,"x-axis measures volume,","lab")}${T(470,216,"not time","lab")}`)};
+V.pnf=()=>{let g="";const col=(x,y0,n,ch)=>{for(let i=0;i<n;i++)g+=T(x,y0-i*18,ch,"pnfc","text-anchor=\"middle\"")};col(80,220,5,"X");col(104,148,3,"O");col(128,220,7,"X");col(152,112,4,"O");col(176,220,8,"X");return S(620,280,`${g}${L([[50,250],[230,70]],"ln gd")}${T(240,70,"Bullish support line (45°)","lab")}
+${(()=>{let h="";const c2=(x,y0,n,ch)=>{for(let i=0;i<n;i++)h+=T(x,y0+i*18,ch,"pnfc","text-anchor=\"middle\"")};c2(360,60,5,"O");c2(384,132,3,"X");c2(408,60,7,"O");c2(432,168,4,"X");c2(456,60,8,"O");return h})()}${L([[330,30],[510,210]],"ln bd")}${T(300,245,"Bearish resistance line (45°)","lab")}
+${T(30,30,"Point-and-figure: Xs rise, Os fall, time is ignored, only moves beyond the box size are recorded","lab")}`)};
+V.sr=()=>{const p=[[30,100],[70,70],[110,118],[150,65],[190,120],[230,80],[270,122],[300,100],[330,160],[360,125],[390,185],[420,150],[450,210]];return S(620,280,`${H(30,310,120,"ln gd")}${H(310,470,120,"ln bd")}${L(p,"ln ac")}
+${T(40,145,"Support: buyers overwhelm sellers","gdt")}${T(300,100,"After the break, old support","bdt")}${T(300,84,"becomes resistance (polarity)","bdt")}${L([[330,118],[350,118]],"mu")}
+${T(480,60,"Three bounces built","lab")}${T(480,76,"the level. One break","lab")}${T(480,92,"flipped its role.","lab")}${T(480,124,"Round numbers act","lab")}${T(480,140,"the same way.","lab")}`)};
+V.range=()=>{const p=[[30,150],[60,90],[90,150],[120,92],[150,148],[180,88],[210,150],[240,90],[270,148],[300,92],[330,150],[360,88],[390,60],[420,30]];return S(620,260,`${H(30,370,88,"ln bd")}${H(30,370,150,"ln gd")}${L(p,"ln ac")}
+${T(40,78,"Resistance","bdt")}${T(40,172,"Support","gdt")}${T(130,120,"Trading range: a battleground","lab")}${T(130,136,"(consolidation, congestion area, rectangle)","lab")}
+${T(400,40,"Breakout: the most profitable","key")}${T(400,58,"and reliable range strategy","key")}${T(400,86,"Range trading (mean reversion)","lab")}${T(400,102,"is risky and costs more in fees","lab")}`)};
+V.trendline=()=>{const p=[[30,250],[80,180],[110,215],[170,130],[200,170],[260,90],[300,130],[360,50],[400,90]];return S(620,290,`${L([[30,250],[400,100]],"ln gd")}${L([[80,180],[400,40]],"ln bd")}${L([[55,215],[380,70]],"mu")}${L(p,"ln ac")}
+${T(410,104,"Trend line: through ≥ 2 lows","gdt")}${T(410,44,"Channel line: parallel, opposite side","bdt")}${T(410,74,"Internal trend line: cuts the bars","lab")}
+${T(30,280,"Longer line + more touches = more significant break. Steeper angle = more power, less sustainable.","lab")}`)};
+V.fan=()=>{const p=[[30,250],[90,160],[120,200],[180,120],[210,165],[250,130],[290,160],[330,145],[370,185],[410,170],[450,220]];return S(620,290,`${L([[30,250],[200,60]],"ln gd")}${L([[30,250],[320,110]],"ln gd")}${L([[30,250],[440,160]],"ln gd")}${L(p,"ln ac")}
+${T(205,60,"Fan 1","lab")}${T(325,110,"Fan 2","lab")}${T(445,160,"Fan 3","lab")}${T(380,250,"3rd break → reversal expected","bdt")}
+${T(30,280,"Decelerating: each break is redrawn flatter from the same origin. Expect at most three.","lab")}`)};
+V.pbtb=()=>{const a=[[30,180],[60,150],[90,185],[120,150],[150,180],[180,120],[210,90],[240,125],[270,110],[300,60]];const b=[[340,90],[370,120],[400,85],[430,120],[460,90],[490,160],[520,190],[550,150],[580,170],[600,230]];return S(620,290,`${H(30,310,135,"ln bd")}${L(a,"ln ac")}${T(30,30,"Throwback","key")}${T(30,50,"after an UPWARD breakout,","lab")}${T(30,66,"price comes back to test the line","lab")}${L([[240,125],[246,130]],"ln")}${T(250,150,"throwback","lab")}
+${L([[325,20],[325,280]],"mu")}
+${H(340,610,135,"ln gd")}${L(b,"ln ac")}${T(340,30,"Pullback","key")}${T(340,50,"after a DOWNWARD breakout,","lab")}${T(340,66,"price bounces up to test the line","lab")}${T(555,140,"pullback","lab")}`)};
+V.ma=()=>{const pr=[[30,170],[70,140],[110,155],[150,120],[190,135],[230,100],[270,118],[300,110],[330,120],[360,105],[390,118],[420,108],[460,80],[500,60],[540,50]];const sh=[[50,165],[110,148],[170,128],[230,112],[290,114],[330,116],[370,114],[410,112],[460,95],[540,62]];const lg=[[50,175],[150,160],[250,145],[330,130],[410,118],[480,108],[540,100]];return S(620,290,`${L(pr,"ln mu2")}${L(sh,"ln ac")}${L(lg,"ln")}
+<circle cx="236" cy="130" r="7" class="mark gdm"/>${T(150,215,"Bullish crossover: short MA crosses above long MA","gdt")}
+<rect x="290" y="95" width="130" height="50" class="hl"/>${T(295,250,"Sideways stretch: crossovers whipsaw","bdt")}
+${T(30,30,"Price (thin), short MA (accent), long MA (dark)","lab")}${T(430,270,"Crossing below = bearish","lab")}`)};
+V.smaema=()=>{const pr=[[30,120],[70,120],[100,140],[130,200],[160,230],[190,215],[220,170],[250,130],[290,100],[330,80],[380,70]];const ema=[[60,122],[110,140],[150,180],[190,200],[220,185],[260,150],[300,120],[340,100],[380,88]];const sma=[[60,122],[110,128],[150,150],[190,178],[220,190],[260,180],[300,160],[340,135],[380,115]];return S(620,280,`${L(pr,"ln mu2")}${L(ema,"ln gd")}${L(sma,"ln bd")}
+${T(400,70,"EMA (green) turns up first:","gdt")}${T(400,88,"newest price weighted 2/(N+1)","lab")}${T(400,118,"SMA (red) lags: equal weights,","bdt")}${T(400,136,"and jumps when an old price","lab")}${T(400,152,"drops off (drop-off effect)","lab")}
+${T(30,260,"10-period EMA = 18.18% weight; 20-period = 9.52%; weight halves when the period doubles","lab")}`)};
+V.dm=()=>{const pair=(x,h1,l1,h2,l2,title,note,cls)=>`${L([[x,h1],[x,l1]],"ln")}${L([[x+30,h2],[x+30,l2]],"ln ac")}${H(x-8,x+40,Math.min(h1,h2),"mu")}${H(x-8,x+40,Math.max(l1,l2),"mu")}${T(x+15,230,title,"key","text-anchor=\"middle\"")}${T(x+15,248,note,cls||"lab","text-anchor=\"middle\"")}`;return S(620,270,`${pair(60,120,180,90,160,"+DM","high above prior high","gdt")}${pair(200,100,160,120,200,"−DM","low below prior low","bdt")}${pair(340,90,200,120,170,"Inside day","both inside: DM = 0")}${pair(480,120,170,90,200,"Outside day","larger difference wins")}
+${T(310,30,"Yesterday (dark) vs. today (accent). Candle colors are irrelevant. Never both +DM and −DM in one day.","lab","text-anchor=\"middle\"")}`)};
+V.adx=()=>{const pr=[[30,70],[80,60],[130,80],[180,55],[230,70],[280,40],[330,30],[380,50],[430,35],[480,60],[530,75],[580,65]];const adx=[[30,230],[80,225],[130,215],[180,200],[230,180],[280,160],[330,150],[380,158],[430,175],[480,195],[530,210],[580,215]];const pdi=[[30,205],[80,195],[130,205],[180,180],[230,170],[280,165],[330,160],[380,175],[430,185],[480,200],[530,205],[580,200]];const mdi=[[30,215],[80,225],[130,220],[180,235],[230,240],[280,245],[330,248],[380,240],[430,230],[480,215],[530,205],[580,210]];return S(620,280,`${L(pr,"ln mu2")}${T(30,30,"Price","lab")}${H(30,580,110,"mu")}
+${H(30,580,210,"mu")}${T(585,214,"20","lab")}${H(30,580,160,"mu")}${T(585,164,"40","lab")}${L(adx,"ln")}${L(pdi,"ln gd")}${L(mdi,"ln bd")}
+${T(30,135,"ADX (dark) = strength, not direction. +DI (green) and −DI (red) = direction.","lab")}${T(340,140,"ADX peak above both DIs → trend peak","lab")}
+${T(30,268,"Below 20 weak or sideways · 20–25 rising: developing · above 40 strong · 50+ extended. Trade DI crosses only when ADX rises.","lab")}`)};
+V.bands=()=>{const pr=[[0,60],[20,50],[40,65],[60,45],[80,70],[100,40],[120,55],[140,30],[160,45],[180,35]];const sh=(dx,dy)=>pr.map(p=>[p[0]+dx,p[1]+dy]);const mid=p=>p.map((q,i)=>[q[0],q[1]+(i%2?-6:6)]);const panel=(x,title,up,lo)=>`${L(sh(x,120),"ln ac")}${L(up,"ln")}${L(lo,"ln")}${T(x,30,title,"key")}`;
+const envU=sh(30,120).map(p=>[p[0],p[1]-25]),envL=sh(30,120).map(p=>[p[0],p[1]+25]);
+const bbU=sh(230,120).map((p,i)=>[p[0],p[1]-(10+Math.abs(Math.sin(i))*22)]),bbL=sh(230,120).map((p,i)=>[p[0],p[1]+(10+Math.abs(Math.sin(i))*22)]);
+const dc=sh(430,120);let hh=[],ll=[];dc.forEach((p,i)=>{const w=dc.slice(Math.max(0,i-3),i+1);hh.push([p[0],Math.min(...w.map(q=>q[1]))-6]);ll.push([p[0],Math.max(...w.map(q=>q[1]))+6])});
+return S(620,260,`${panel(30,"Percentage envelope",envU,envL)}${T(30,232,"fixed % above and below the MA;","lab")}${T(30,248,"ignores volatility, same width always","lab")}
+${panel(230,"Bollinger Bands",bbU,bbL)}${T(230,232,"20-day SMA ± 2 standard deviations;","lab")}${T(230,248,"widen in volatility, shrink when calm","lab")}
+${panel(430,"Donchian Channel",hh,ll)}${T(430,232,"20-day highest high / lowest low;","lab")}${T(430,248,"trade the breakouts (SAR)","lab")}`)};
+V.lwma=()=>S(620,150,`${T(310,40,"5-day LWMA = (5·P₅ + 4·P₄ + 3·P₃ + 2·P₂ + 1·P₁) ÷ (5+4+3+2+1 = 15)","key","text-anchor=\"middle\"")}${T(310,75,"10-day divides by 10+9+…+1 = 55. Newest price gets the biggest multiplier.","lab","text-anchor=\"middle\"")}${T(310,110,"EMA instead: multiplier = 2 ÷ (N + 1); EMA = (Close − prior EMA) × multiplier + prior EMA","lab","text-anchor=\"middle\"")}`);
+V.rmult=()=>S(620,170,`${T(20,40,"1R = (entry − stop) × size","key")}${T(20,62,"$50 entry, $47.50 stop, 100 sh → 1R = $250","lab")}${T(20,100,"R-multiple = P&L ÷ initial risk","key")}${T(20,122,"+$500 on $100 risk = +5R · +$500 on $1,000 risk = +0.5R · stop-out = −1R","lab")}${T(20,150,"Expectancy = (win% × avg win R) − (loss% × avg loss R)   e.g. 0.4×3 − 0.6×1 = +0.6R","lab")}`);
+V.keys=()=>S(620,150,`<rect x="20" y="30" width="130" height="70" rx="6" class="box"/>${T(85,62,"Objective","key","text-anchor=\"middle\"")}${T(85,80,"indicators","key","text-anchor=\"middle\"")}<rect x="170" y="30" width="130" height="70" rx="6" class="box"/>${T(235,70,"Discipline","key","text-anchor=\"middle\"")}<rect x="320" y="30" width="130" height="70" rx="6" class="box"/>${T(385,70,"Flexibility","key","text-anchor=\"middle\"")}<rect x="470" y="30" width="130" height="70" rx="6" class="box"/>${T(535,62,"Risk","key","text-anchor=\"middle\"")}${T(535,80,"management","key","text-anchor=\"middle\"")}
+${T(310,130,"Ned Davis: the four real keys to making money. Not forecasting.","lab","text-anchor=\"middle\"")}`);
+// which visual goes with which question or card (first match wins)
+const MAP=[[/NDR research wheel|research wheel|idea wheel/i,"wheel",[2]],[/Company vs\.? (the )?Stock|Phil Roth|Stock side|company side|open interest/i,"cvs",[1]],[/navigate the gap|The Gap|intrinsic value.*market price|price vs\.? value/i,"gap",[1]],[/\(F ?× ?V\)|sentiment exponent|exponent S|P = \(F/i,"pvs",[1]],[/phase/i,"phases",[4]],[/secondary trend|minor trend|primary trend|three trends|retrace/i,"trends",[4]],[/confirm|DJTA|transport|diverg/i,"confirm",[4]],[/equivolume/i,"equivol",[7]],[/volume/i,"volume",[4,7]],[/contrary opinion|liquidity|crowd at extremes|shock absorber|optimism/i,"crowd",[2]],[/four keys|four real keys|which key/i,"keys",[2]],[/breakeven|win rate below 50|positive expectancy|wrong 60|Melamed/i,"breakeven",[2]],[/R-multiple|\b1R\b|initial risk|position size|expectancy|stop-out|stopped out/i,"rmult",[2]],[/belief perseverance|processing error|cognitive error|emotional bias|subcategor|categor|classified as/i,"biastree",[3]],[/prospect theory|loss aversion|disposition effect|double|twice/i,"prospect",[3]],[/candle|doji|real body|shadow|hollow|filled/i,"candle",[7]],[/OHLC|left tick|right tick|HLC bar|bar chart|high minus low|\brange\b/i,"ohlc",[7]],[/logarithmic|log scale|arithmetic|semi-log|equal vertical distance|percentage change|points, so/i,"scale",[6,7]],[/point-and-figure|point and figure|P&F|45 degree|45°/i,"pnf",[6,7]],[/throwback|pullback/i,"pbtb",[6]],[/fan line|decelerating|accelerating/i,"fan",[6]],[/trading range|breakout|consolidation|congestion|rectangle|range trading|mean reversion/i,"range",[6]],[/polarity|\bsupport\b|\bresistance\b|round number/i,"sr",[6]],[/trend line|trendline|channel line|internal trend|regression line|steeper|reversal tools/i,"trendline",[6]],[/\+DM|-DM|−DM|directional movement \(|inside day|outside day|today's high|today's low/i,"dm",[8]],[/ADX|\+DI|-DI|−DI|Directional Movement Indicator|DMI|True Range|ATR/i,"adx",[8]],[/Bollinger|envelope|Keltner|Donchian|band|channel|typical price|standard deviation/i,"bands",[8]],[/linearly weighted|LWMA|weighted sum|multipliers/i,"lwma",[8]],[/\bEMA\b|exponential|drop-off|SMA vs|turned up first|weighting|multiplier|halves/i,"smaema",[8]],[/crossover|cross(es|ing) (above|below)|ribbon|whipsaw|rebound|Stage 2|trailing stop|200-day/i,"ma",[8]],[/moving average|\bMA\b|\bSMA\b|lag/i,"ma",[8]]];
+function pick(text,ch){for(const [re,id,chs] of MAP){if((!chs||!ch||chs.includes(+ch))&&re.test(text))return id}return null}
+function render(id){const f=V[id];return f?`<div class="visbox">${f()}</div>`:""}
+return {pick,render,V};
+})();
+Q.forEach(q=>{if(!q.v){q.v=VIS.pick(q.q,q.ch);if(!q.v){const v=VIS.pick(q.q+" "+(q.o||[]).join(" "),q.ch);if(v!=="volume")q.v=v}}});
+
 const S = {mode:"practice", ch:"all", type:"all", order:Q.map((_,i)=>i), ans:{}, checked:{}, submitted:false, sim:null, deadline:0, tick:null};
 const $ = s=>document.querySelector(s);
 function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
@@ -609,7 +751,7 @@ function render(){
     if(shown)h+=`<span class="verdict ${isRight(i)?"good":"bad"}">${isRight(i)?"Correct":"Not quite · answer: "+fmtAns(q)}</span>`;
     else if(S.mode==="exam"&&S.submitted)h+=`<span class="verdict bad">Unanswered · answer: ${fmtAns(q)}</span>`;
     h+=`</div>`;
-    if(shown||(S.mode==="exam"&&S.submitted))h+=`<div class="explain ${shown&&isRight(i)?"good":"bad"}">${q.x}</div>`;
+    if(shown||(S.mode==="exam"&&S.submitted))h+=`<div class="explain ${shown&&isRight(i)?"good":"bad"}">${q.x}${q.v?VIS.render(q.v):""}</div>`;
     h+=`</div>`;li.innerHTML=h;list.appendChild(li);
   });
   list.querySelectorAll("input[type=radio]").forEach(r=>r.onchange=()=>{const i=+r.name.slice(1);S.ans[i]=r.value;if(S.mode==="practice"){delete S.checked[i];rerenderOne(i)}tally()});
@@ -809,6 +951,7 @@ const DECK=[
 {c:8,t:"Mean reversion ratio",d:"Ratio of the close to a 10-day SMA used to spot price extremes; readings near 1.045 and 0.975 marked turns in the Walmart example.",w:"Prices tend to return to their average. Strategy 3 of the four MA strategies.",k:["Four MA strategies","Percentage envelope","ADX levels"]}
 ];
 
+DECK.forEach(c=>{if(!c.v)c.v=VIS.pick(c.t+" "+c.d+" "+(c.s||""),c.c)});
 const LKEY="ta-leitner-v2";
 const INTERVALS=[0,1,3,7,21];              // days until due, by box
 const L={ch:"all",queue:[],idx:0,phase:"q",last:null,st:{},ahead:false,right:0,wrong:0};
@@ -842,11 +985,11 @@ function renderLearn(){ltally();const card=$("#lcard");card.className="lcard";co
   const it=L.queue[L.idx],c=it.c,m=it.m,s=stOf(c);const label={study:"Learn this card",pick:"Pick the term",scene:"Name the concept",fill:"Fill in the number",recall:"Recall, then check"}[m];
   const prog=`<div class="lkind"><span>${label} · ${L.idx+1} of ${L.queue.length}</span><span>Box ${s.box} · Ch ${c.c} ${CH_NAMES[c.c]}</span></div>`;
   let h=prog;
-  if(m==="study"){h+=`<p class="ldef">${c.t}</p><div class="lans"><b>${c.d}</b></div><p class="lwhy">${c.w||""}</p>${c.n?`<p class="hint">Number to know: ${c.n[0].replace("___","<b>"+c.n[1]+"</b>")}</p>`:""}<div class="actions"><button class="btn" id="l-cont">Got it, continue</button></div><p class="keyhint"><kbd>space</kbd> continue</p>`;
+  if(m==="study"){h+=`<p class="ldef">${c.t}</p><div class="lans"><b>${c.d}</b></div><p class="lwhy">${c.w||""}</p>${c.v?VIS.render(c.v):""}${c.n?`<p class="hint">Number to know: ${c.n[0].replace("___","<b>"+c.n[1]+"</b>")}</p>`:""}<div class="actions"><button class="btn" id="l-cont">Got it, continue</button></div><p class="keyhint"><kbd>space</kbd> continue</p>`;
     card.innerHTML=h;$("#l-cont").onclick=()=>{const k=ckey(c);if(stOf(c).seen===0){L.st[k]={box:0,seen:1,due:Date.now()};lsave()}advance()};document.onkeydown=e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();$("#l-cont").click()}};return}
   if(m==="recall"){
     if(L.phase==="q"){h+=`<p class="ldef">${c.t}</p><p class="hint">Say the definition out loud, then reveal.</p><div class="actions"><button class="btn" id="l-reveal">Reveal</button></div><p class="keyhint"><kbd>space</kbd> reveal</p>`;card.innerHTML=h;$("#l-reveal").onclick=()=>{L.phase="fb";L.last={ok:null};renderLearn()};document.onkeydown=e=>{if(e.key===" "||e.key==="Enter"){e.preventDefault();$("#l-reveal").click()}};return}
-    h+=`<p class="ldef">${c.t}</p><div class="lans"><b>${c.d}</b></div><p class="lwhy">${c.w||""}</p><div class="actions"><button class="btn again" id="l-again">Again</button><button class="btn got" id="l-got">Got it</button></div><p class="keyhint"><kbd>&larr;</kbd> again &nbsp;·&nbsp; <kbd>&rarr;</kbd> got it</p>`;
+    h+=`<p class="ldef">${c.t}</p><div class="lans"><b>${c.d}</b></div><p class="lwhy">${c.w||""}</p>${c.v?VIS.render(c.v):""}<div class="actions"><button class="btn again" id="l-again">Again</button><button class="btn got" id="l-got">Got it</button></div><p class="keyhint"><kbd>&larr;</kbd> again &nbsp;·&nbsp; <kbd>&rarr;</kbd> got it</p>`;
     card.innerHTML=h;$("#l-again").onclick=()=>{selfGrade(false)};$("#l-got").onclick=()=>{selfGrade(true)};document.onkeydown=e=>{if(e.key==="ArrowLeft")$("#l-again").click();if(e.key==="ArrowRight")$("#l-got").click()};return}
   const prompt=m==="scene"?c.s:(m==="fill"?c.n[0]:c.d);
   h+=`<p class="ldef">${prompt}</p>`;
@@ -858,7 +1001,7 @@ function renderLearn(){ltally();const card=$("#lcard");card.className="lcard";co
     const ok=L.last.ok;card.classList.add(ok?"right":"wrong");
     if(m==="fill")h+=`<div class="lwrite"><input id="l-in" disabled value="${esc(L.last.given)}" aria-label="Your answer"></div>`;
     else h+=`<div class="lopts">`+L.last.opts.map((t,i)=>`<button class="lopt ${t===c.t?"is-right":(t===L.last.given?"is-wrong":"")}" disabled><span class="num">${i+1}</span>${t}</button>`).join("")+`</div>`;
-    h+=`<div class="lans ${ok?"good":"bad"}"><b>${ok?"Correct":"Not quite"}</b> · <b>${c.t}</b>: ${c.d}</div><p class="lwhy">${c.w||""}</p><div class="actions"><button class="btn" id="l-cont">Continue</button>${(!ok&&m==="fill"&&L.last.given)?`<button class="btn ghost" id="l-override">I was right</button>`:""}</div><p class="keyhint"><kbd>enter</kbd> continue</p>`;
+    h+=`<div class="lans ${ok?"good":"bad"}"><b>${ok?"Correct":"Not quite"}</b> · <b>${c.t}</b>: ${c.d}</div><p class="lwhy">${c.w||""}</p>${c.v?VIS.render(c.v):""}<div class="actions"><button class="btn" id="l-cont">Continue</button>${(!ok&&m==="fill"&&L.last.given)?`<button class="btn ghost" id="l-override">I was right</button>`:""}</div><p class="keyhint"><kbd>enter</kbd> continue</p>`;
     card.innerHTML=h;$("#l-cont").focus();$("#l-cont").onclick=advance;const ov=$("#l-override");if(ov)ov.onclick=()=>{const k=ckey(c),s2=stOf(c);const nb=Math.min(4,s2.box+1);L.st[k]={box:nb,seen:s2.seen,due:Date.now()+INTERVALS[nb]*86400000};lsave();L.right++;L.wrong--;L.queue.splice(L.idx+1,2);advance()};
     document.onkeydown=e=>{if(e.key==="Enter"||e.key===" "){e.preventDefault();advance()}}
   }
