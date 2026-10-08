@@ -1,0 +1,906 @@
+<title>Technical Analysis Practice Quiz</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=Bitter:wght@600;700&family=IBM+Plex+Mono:wght@500&family=Source+Sans+3:wght@400;600&display=swap">
+<style>
+/* Layout: Ol' AGS system. Sticky topbar with wordmark and segmented tabs, pill filter chips, question tickets as cards. */
+:root{
+  --ground:#FAF7F7; --surface:#FFFFFF; --surface-2:#F2ECED;
+  --ink:#1B1416; --muted:#6F6165; --line:#E5DCDD;
+  --accent:#6B1220; --accent-ink:#FFFFFF; --accent-soft:#F6E9EB;
+  --good:#2E6B4E; --good-soft:#E6F1EB;
+  --bad:#A33220; --bad-soft:#FAE7E3;
+  --shadow:0 1px 2px rgba(27,20,22,.06),0 8px 24px rgba(27,20,22,.07);
+  --display:"Bitter",Georgia,serif;
+  --body:"Source Sans 3","Segoe UI",system-ui,sans-serif;
+  --mono:"IBM Plex Mono",ui-monospace,Menlo,monospace;
+}
+@media (prefers-color-scheme:dark){
+  :root:not([data-theme="light"]){
+    --ground:#151112; --surface:#1E1819; --surface-2:#282022;
+    --ink:#F3ECED; --muted:#A79A9E; --line:#342B2D;
+    --accent:#DC909B; --accent-ink:#1B1416; --accent-soft:#31191E;
+    --good:#7FCBA2; --good-soft:#18291F;
+    --bad:#EB9179; --bad-soft:#2D1A15;
+    --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark
+  }
+}
+:root[data-theme="dark"]{
+  --ground:#151112; --surface:#1E1819; --surface-2:#282022;
+  --ink:#F3ECED; --muted:#A79A9E; --line:#342B2D;
+  --accent:#DC909B; --accent-ink:#1B1416; --accent-soft:#31191E;
+  --good:#7FCBA2; --good-soft:#18291F;
+  --bad:#EB9179; --bad-soft:#2D1A15;
+  --shadow:0 1px 2px rgba(0,0,0,.4),0 8px 24px rgba(0,0,0,.35); color-scheme:dark
+}
+*{box-sizing:border-box}
+body{background:var(--ground);color:var(--ink);font-family:var(--body);font-size:16px;line-height:1.5;-webkit-font-smoothing:antialiased;padding-inline:0;padding-block:0}
+button{font:inherit;color:inherit;cursor:pointer}
+:focus-visible{outline:2px solid var(--accent);outline-offset:2px;border-radius:3px}
+kbd{font-family:var(--mono);font-size:.7rem;border:1px solid var(--line);border-bottom-width:2px;border-radius:3px;padding:0 4px;background:var(--surface)}
+
+/* topbar */
+.topbar{position:sticky;top:env(safe-area-inset-top,0px);z-index:20;background:var(--ground);border-bottom:1px solid var(--line)}
+.topbar-in{max-width:1000px;margin:0 auto;padding-block:12px;padding-inline:16px;display:flex;flex-wrap:wrap;gap:10px 16px;align-items:baseline}
+.wordmark{font-family:var(--display);font-weight:700;font-size:1.22rem;letter-spacing:-.01em;margin:0}
+.wordmark .dot{color:var(--accent)}
+.sub{font-family:var(--mono);font-size:.7rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted)}
+.tabs{margin-left:auto;display:flex;gap:4px;background:var(--surface-2);padding:3px;border-radius:7px}
+.tab{border:0;background:none;padding:6px 13px;border-radius:5px;font-size:.88rem;font-weight:600;color:var(--muted)}
+.tab[aria-pressed="true"]{background:var(--surface);color:var(--ink);box-shadow:0 1px 2px rgba(0,0,0,.08)}
+
+.wrap{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:20px 48px}
+.lede{color:var(--muted);max-width:66ch;margin:0 0 16px;font-size:.96rem}
+
+/* filter rows */
+.controls{display:flex;flex-direction:column;gap:8px;margin-bottom:18px}
+.row{display:flex;flex-wrap:wrap;gap:8px;align-items:center}
+.row .lbl{font-family:var(--mono);font-size:.7rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);min-width:64px}
+.chip{border:1px solid var(--line);background:var(--surface);padding:5px 12px;border-radius:999px;font-size:.84rem;font-weight:600;color:var(--muted);display:inline-flex;gap:6px;align-items:center}
+.chip[aria-pressed="true"]{background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn{border:1px solid var(--line);background:var(--surface);padding:8px 14px;border-radius:7px;font-weight:600;font-size:.9rem;color:var(--ink)}
+.btn:hover{border-color:var(--muted)}
+.btn:not(.ghost){background:var(--accent);border-color:var(--accent);color:var(--accent-ink)}
+.btn.ghost{color:var(--muted)}
+.btn.ghost:hover{color:var(--ink)}
+.btn:disabled{opacity:.45;cursor:default}
+
+/* scoreboard */
+.score{position:sticky;top:calc(env(safe-area-inset-top,0px) + 54px);z-index:10;background:var(--ground);border-bottom:1px solid var(--line);padding-block:10px;margin-bottom:18px}
+.score .inner{display:flex;flex-wrap:wrap;gap:10px 22px;align-items:center;justify-content:space-between}
+.tally{display:flex;gap:18px;flex-wrap:wrap;font-family:var(--mono);font-size:.72rem;letter-spacing:.05em;text-transform:uppercase;color:var(--muted);font-variant-numeric:tabular-nums}
+.tally b{font-size:1.05rem;color:var(--ink);font-weight:500;display:block}
+.bar{height:3px;background:var(--surface-2);border-radius:2px;overflow:hidden;margin-top:8px}
+.bar i{display:block;height:100%;background:var(--accent);width:0;transition:width .3s ease}
+.timer{font-family:var(--mono);font-size:1rem;font-variant-numeric:tabular-nums;padding:6px 10px;border:1px solid var(--line);border-radius:6px;background:var(--surface)}
+.timer.low{color:var(--bad);border-color:var(--bad)}
+
+/* question tickets */
+ol.qs{list-style:none;padding:0;margin:0;display:flex;flex-direction:column;gap:14px}
+.q{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:18px 18px 16px;display:grid;grid-template-columns:auto 1fr;gap:4px 14px}
+.q.right{border-color:var(--good)} .q.wrong{border-color:var(--bad)}
+.qn{font-family:var(--mono);font-size:.78rem;color:var(--muted);padding-top:3px;font-variant-numeric:tabular-nums}
+.qbody{min-width:0}
+.meta{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
+.tag{font-family:var(--mono);font-size:.68rem;letter-spacing:.05em;text-transform:uppercase;padding:3px 8px;border-radius:3px;background:var(--surface-2);color:var(--muted)}
+.prompt{margin:0 0 12px;max-width:70ch;font-size:1.02rem;font-weight:600;line-height:1.4}
+.opts{display:grid;gap:8px}
+.opt{display:flex;gap:10px;align-items:flex-start;text-align:left;border:1px solid var(--line);background:var(--surface);padding:10px 14px;border-radius:7px;font-weight:600;font-size:.96rem;cursor:pointer}
+.opt:hover{border-color:var(--muted)}
+.opt input{margin-top:5px;accent-color:var(--ink)}
+.opt.is-right{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.opt.is-wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.opt.is-right input{accent-color:var(--good)} .opt.is-wrong input{accent-color:var(--bad)}
+.numrow{display:flex;gap:8px;flex-wrap:wrap;align-items:center}
+.numrow input{font-family:var(--mono);font-size:.95rem;padding:8px 11px;border:1px solid var(--line);border-radius:6px;background:var(--surface);color:var(--ink);width:180px;max-width:100%}
+.unit{font-family:var(--mono);font-size:.78rem;color:var(--muted)}
+.actions{display:flex;gap:8px;margin-top:12px;flex-wrap:wrap;align-items:center}
+.verdict{font-weight:600;font-size:.94rem}
+.verdict.good{color:var(--good)} .verdict.bad{color:var(--bad)}
+.explain{margin-top:10px;padding:11px 12px;border-radius:6px;background:var(--accent-soft);font-size:.9rem;line-height:1.45;max-width:72ch}
+.explain.good{background:var(--good-soft)}
+.explain.bad{background:var(--bad-soft)}
+.explain code,.mono{font-family:var(--mono);font-size:.82rem}
+.results{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:18px;margin-bottom:18px}
+.results h2{font-family:var(--display);font-weight:700;font-size:1.5rem;margin:0 0 10px}
+.tbl{overflow-x:auto}
+table{border-collapse:collapse;width:100%;font-variant-numeric:tabular-nums;font-size:.92rem}
+th,td{text-align:left;padding:6px 8px;border-bottom:1px solid var(--line)}
+th{font-family:var(--mono);font-size:.68rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);font-weight:500}
+td.pct{font-family:var(--mono)}
+.empty{color:var(--muted);padding:24px 0}
+.hint{font-size:.84rem;color:var(--muted)}
+
+/* learn */
+body.learning .quiz-only{display:none!important}
+.learn{display:flex;flex-direction:column;gap:14px;max-width:640px;margin:0 auto}
+.lhow{color:var(--muted);max-width:62ch;margin:0;font-size:.9rem}
+.ltiles{display:grid;grid-template-columns:repeat(4,1fr);gap:10px}
+.ltile{background:var(--surface);border:1px solid var(--line);border-radius:8px;padding:10px 12px;font-variant-numeric:tabular-nums}
+.ltile span{font-family:var(--mono);font-size:.66rem;letter-spacing:.06em;text-transform:uppercase;color:var(--muted);display:block}
+.ltile b{font-family:var(--mono);font-size:1.2rem;font-weight:500}
+.ltile.m b{color:var(--good)}
+.lbar i{background:var(--good)}
+.lcard{background:var(--surface);border:1px solid var(--line);border-radius:10px;box-shadow:var(--shadow);padding:22px 20px;min-height:280px;display:flex;flex-direction:column;gap:14px}
+.lcard.right{border-color:var(--good)} .lcard.wrong{border-color:var(--bad)}
+.lkind{font-family:var(--mono);font-size:.68rem;letter-spacing:.07em;text-transform:uppercase;color:var(--muted);display:flex;justify-content:space-between;gap:10px;flex-wrap:wrap}
+.ldef{font-family:var(--display);font-weight:600;font-size:clamp(1.15rem,2.6vw,1.45rem);line-height:1.3;text-wrap:balance;max-width:42ch;margin:0}
+.lopts{display:grid;gap:8px;grid-template-columns:1fr 1fr}
+.lopt{text-align:left;border:1px solid var(--line);background:var(--surface);padding:11px 14px;border-radius:7px;font-weight:600;font-size:.96rem;min-width:0}
+.lopt:hover:not(:disabled){border-color:var(--muted)}
+.lopt:disabled{cursor:default}
+.lopt.is-right{background:var(--good-soft);border-color:var(--good);color:var(--good)}
+.lopt.is-wrong{background:var(--bad-soft);border-color:var(--bad);color:var(--bad)}
+.lwrite{display:flex;gap:8px;flex-wrap:wrap}
+.lwrite input{flex:1;min-width:200px;font:inherit;font-size:1rem;padding:10px 12px;border:1px solid var(--line);border-radius:7px;background:var(--surface);color:var(--ink)}
+.lans{padding:11px 12px;border-radius:6px;background:var(--accent-soft);font-size:.9rem;max-width:70ch}
+.lans.good{background:var(--good-soft)} .lans.bad{background:var(--bad-soft)}
+.lsum{display:flex;flex-direction:column;gap:10px}
+.lsum h2{font-family:var(--display);font-weight:700;font-size:1.5rem;margin:0}
+.lsum ul{margin:0;padding-left:18px;columns:2;column-gap:24px}
+.lsum li{break-inside:avoid;font-size:.9rem}
+.foot{max-width:1000px;margin:0 auto;padding-inline:16px;padding-block:0 32px;font-size:.8rem;color:var(--muted);text-align:center}
+@media (prefers-reduced-motion:reduce){*{animation-duration:.01ms!important;transition-duration:.01ms!important}}
+@media(max-width:560px){.lopts{grid-template-columns:1fr}.ltiles{grid-template-columns:repeat(2,1fr)}.lsum ul{columns:1}.q{grid-template-columns:1fr}.qn{padding:0}}
+@media (max-width:430px){.tabs{margin-left:0;width:100%}.tab{flex:1;padding:6px 8px}}
+</style>
+
+<header class="topbar">
+  <div class="topbar-in">
+    <h1 class="wordmark">FINC 446<span class="dot">.</span> Midterm 1 Drill</h1>
+    <span class="sub">Lectures 01–08 · 309 questions · 229 terms</span>
+    <div class="tabs" role="tablist">
+      <button class="tab" id="sec-quiz" data-sec="quiz" aria-pressed="true">Quiz</button>
+      <button class="tab" id="sec-learn" data-sec="learn" aria-pressed="false">Learn</button>
+    </div>
+  </div>
+</header>
+
+<main class="wrap">
+  <p class="lede quiz-only">Multiple choice, true/false, and short calculations from all eight decks. Practice grades as you go; Exam holds feedback until you submit; Exam Sim builds a 50-question, 75-minute test weighted the way the professor described Midterm 1. Learn drills each chapter's terms Quizlet-style.</p>
+  <div class="controls quiz-only">
+    <div class="row" role="group" aria-label="Mode"><span class="lbl">Mode</span>
+      <button class="chip" id="m-practice" aria-pressed="true" data-mode="practice">Practice</button>
+      <button class="chip" id="m-exam" aria-pressed="false" data-mode="exam">Exam</button>
+    </div>
+    <div class="row" role="group" aria-label="Chapter" id="chapRow"><span class="lbl">Chapter</span></div>
+    <div class="row" role="group" aria-label="Type" id="typeRow"><span class="lbl">Type</span></div>
+    <div class="row"><span class="lbl"></span>
+      <button class="btn ghost" id="shuffle">Shuffle order</button>
+      <button class="btn ghost" id="reset">Clear answers</button>
+    </div>
+  </div>
+
+  <section id="learn" class="learn" hidden>
+    <p class="lhow">Each term is shown as its definition. First you pick the term from four choices; once you get it right, it comes back as a typed answer. Two correct answers in a row master it. Misses go back to the start of the line. Progress is saved in this browser.</p>
+    <div class="row" role="group" aria-label="Learn chapter" id="learnChapRow"><span class="lbl">Chapter</span></div>
+    <div class="ltiles">
+      <div class="ltile m"><span>Mastered</span><b id="l-m">0</b></div>
+      <div class="ltile"><span>Familiar</span><b id="l-f">0</b></div>
+      <div class="ltile"><span>Still learning</span><b id="l-n">0</b></div>
+      <div class="ltile"><span>Round</span><b id="l-r">1</b></div>
+    </div>
+    <div class="bar lbar"><i id="l-bar"></i></div>
+    <div class="lcard" id="lcard"></div>
+    <div class="row"><span class="lbl"></span><button class="btn ghost" id="l-reset">Reset this chapter</button></div>
+  </section>
+
+  <div class="score quiz-only"><div class="inner">
+    <div class="tally">
+      <div><span>Questions</span><b id="t-total">0</b></div>
+      <div><span>Answered</span><b id="t-ans">0</b></div>
+      <div><span>Correct</span><b id="t-right">0</b></div>
+      <div><span>Score</span><b id="t-pct">–</b></div>
+    </div>
+    <div class="row" style="gap:8px"><b class="timer" id="timer" hidden>75:00</b><button class="btn ghost" id="sim">Exam Sim (50 Q · 75 min)</button><button class="btn" id="submit" hidden>Submit exam</button></div>
+  </div><div class="bar"><i id="t-bar"></i></div></div>
+
+  <section class="results quiz-only" id="results" hidden></section>
+  <ol class="qs quiz-only" id="qs"></ol>
+  <p class="empty quiz-only" id="empty" hidden>No questions match these filters.</p>
+</main>
+<p class="foot">Built from the FINC 446/646 Fall 2026 lecture decks. Progress is saved in this browser only.</p>
+
+<script>
+// type: mc (a = index of correct option), tf (a = true/false), num (a = number, tol = allowed error, u = unit hint)
+const Q = [
+// ---------- CHAPTER 1: COURSE OVERVIEW & FOUNDATIONS ----------
+{ch:1,t:"mc",q:"The Chartered Market Technician (CMT) designation, awarded by the CMT Association, focuses on:",o:["Fundamental analysis","Technical analysis","Financial planning","Auditing"],a:1,x:"CMT = technical analysis (FINC 446). CFA = fundamental analysis (FINC 351)."},
+{ch:1,lg:1,t:"mc",q:"CMT Level I is a:",o:["132-question multiple choice exam lasting 2 hours","170-question multiple choice exam lasting 4 hours","Multiple choice and short answer exam lasting 4 hours","Take-home portfolio project"],a:0,x:"Level I: foundational principles, 40 to 100 study hours, 132 MC, 2 hours. Level II: 170 MC, 4 hours. Level III: MC and short answers, 4 hours."},
+{ch:1,lg:1,t:"mc",q:"Which CMT level includes short-answer questions?",o:["Level I","Level II","Level III","None of them"],a:2,x:"Level III, The Work of a Technical Analyst, uses multiple choice and short answers."},
+{ch:1,t:"mc",q:"According to Phil Roth, the biggest mistake a technical analyst makes is:",o:["Ignoring volume","Thinking a stock and a company are different","Thinking a stock and a company are the same thing","Using too many indicators"],a:1,x:"The fundamental analyst's biggest mistake is thinking they are the same; the technical analyst's is thinking they are different."},
+{ch:1,t:"mc",q:"In the Company vs. the Stock diagram, which item belongs on the Stock side?",o:["P/E ratio","Management","Open interest","Dividends"],a:2,x:"Stock side: price, volume, supply and demand, open interest, psychology. Company side: competition, P/E, management, products, dividends."},
+{ch:1,t:"mc",q:"Graham and Dodd's basic principle of finance is that no investment decision on a common stock can properly be made except in light of:",o:["Management quality","A specific price","The dividend yield","Analyst consensus"],a:1,x:"Security Analysis, page 344. The analyst must know what price and time period are combined in any ratio."},
+{ch:1,t:"mc",q:"In the CMT Association formula P = (F × V)^S, the exponent S stands for:",o:["Supply","Sentiment","Standard deviation","Sector"],a:1,x:"In theory Price = Fundamentals × Valuation. In practice the missing piece is sentiment."},
+{ch:1,t:"mc",q:"In a bull market, the sentiment exponent S is:",o:["Exactly 1","A fraction between 0 and 1","A whole number above 1","Negative"],a:2,x:"Bull: above 1. Bear: between 0 and 1. S = 1 is perfectly rational, a state the market hardly ever achieves."},
+{ch:1,t:"mc",q:"Peter Brandt says charts show the path of least resistance and provide:",o:["Guaranteed profits","An excellent risk management tool","Earnings forecasts","Intrinsic value"],a:1,x:"The instructor's goal is for everyone to become visual investors."},
+{ch:1,t:"mc",q:"Charts represent:",o:["Certainties","Probabilities","Possibilities, not probabilities, and certainly not certainties","Fundamentals"],a:2,x:"Straight from the lecture: possibilities, not probabilities, and certainly not certainties."},
+{ch:1,t:"mc",q:"In the survey of investment analysis topics, which topic did practitioners rate highest?",o:["Portfolio theory","Dividend discount model","Support/resistance levels","CAPM/Beta"],a:2,x:"Practitioners: support/resistance 4.41, trend lines 4.39, trading ranges 4.37. Instructors rated those 1.68, 1.70, and 1.66."},
+{ch:1,t:"mc",q:"Which topic did instructors rate highest in the same survey?",o:["Portfolio theory","Charting","Overbought/oversold","Volume tracking"],a:0,x:"Portfolio theory 3.89 for instructors versus 2.44 for practitioners. Instructors rated overbought/oversold lowest at 1.46."},
+{ch:1,t:"mc",q:"Per S&P Dow Jones Indices (data as of Dec 31, 2022), what share of U.S. large-cap funds underperformed the S&P 500 over 15 years?",o:["50.29%","74.27%","93.40%","6.60%"],a:2,x:"93.40% underperformed; only 6.60% outperformed. The 1-year figure was 51.08%."},
+{ch:1,t:"mc",q:"David Keller, CMT: 'An imperfect system followed with discipline is better than...'",o:["No system at all","A perfect system followed erratically","A fundamental system","A consensus view"],a:1,x:"The quote heads the 3Ps slide."},
+{ch:1,t:"mc",q:"The 3Ps for market analysis are:",o:["Price, Pattern, Probability","Philosophy, Process, Psychology","Profit, Protection, Patience","Plan, Position, Performance"],a:1,x:"Philosophy (beliefs), Process (weight of the evidence), Psychology (stoicism, mindfulness, emotion)."},
+{ch:1,t:"mc",q:"According to the Philosophy section of the 3Ps, technicals are the ___ and fundamentals are the ___.",o:["why; what","what; why","when; where","cause; effect"],a:1,x:"Technicals are the what, fundamentals are the why."},
+{ch:1,t:"mc",q:"The 3Ps philosophy says valuations are:",o:["A great timing tool","A great predictor of long-term returns but a poor timing tool","Irrelevant to technicians","Only useful in bear markets"],a:1,x:"Valuation belongs in the environmental (confirmation) models, not the timing models."},
+{ch:1,t:"mc",q:"The market is a discounting mechanism that is:",o:["Quick to react to good news and slow to react to bad news","Slow to react to good news and quick to react to bad news","Equally fast on all news","Unresponsive to news"],a:1,x:"It does not process all information equally."},
+{ch:1,t:"mc",q:"Per the 3Ps, the short term is driven by ___ while the long term is driven by ___.",o:["fundamentals; fear and greed","fear and greed; fundamental factors","the Fed; earnings","volume; price"],a:1,x:"Short term: fear and greed. Long term: fundamental factors."},
+{ch:1,t:"mc",q:"Which is an Environmental Model (confirmation) in the Process column of the 3Ps?",o:["Liquidity","Stoicism","Sector leadership","Mindfulness"],a:0,x:"Environmental models: valuation, liquidity, monetary, fiscal, other external threats. Sector leadership is its own process item; stoicism and mindfulness are psychology."},
+{ch:1,t:"mc",q:"Second-level thinking, which asks you to question the implications of an event, is associated with:",o:["Howard Marks","Warren Buffett","Charles Dow","Peter Brandt"],a:0,x:"Howard Marks: think differently from others and better; ask the right questions; make critical thinking a habit."},
+{ch:1,t:"mc",q:"In January 2001, Fortune ranked Enron number one on its list of:",o:["Most profitable companies","100 Best Companies to Work For","Fastest growing companies","Best dividend payers"],a:1,x:"Fortune also named Enron America's Most Innovative Company six years running, 1996 to 2001, and Worth put Skilling among the 50 best CEOs in May 2001."},
+{ch:1,t:"mc",q:"The most direct legislative response to the Enron scandal was:",o:["Dodd-Frank","Glass-Steagall","The Sarbanes-Oxley Act of 2002","Regulation FD"],a:2,x:"Sarbanes-Oxley expanded disclosure duties, required independent audits and internal controls, and added criminal penalties and clawbacks for executives who certify false statements."},
+{ch:1,t:"mc",q:"Enron filed for Chapter 11 bankruptcy on December 2, 2001, with the stock closing at:",o:["$39.95","$20.75","$0.26","$90.56"],a:2,x:"$90.56 was the 2000 all-time high; $39.95 was the 52-week low after Skilling resigned; $20.75 followed the SEC probe announcement."},
+{ch:1,t:"mc",q:"On the Enron point-and-figure chart, which signal came first?",o:["Double-bottom sell at $19.50","Relative strength chart reversed down in Os in December 2000","Bearish catapult at $51","Sector bear-confirmed at 70"],a:1,x:"The relative strength chart reversed down in December 2000 and peer RS gave a sell in July 2000, months before the March 2001 start of the chart. Technicals led the fundamentals."},
+{ch:1,t:"mc",q:"WorldCom's accounting scandal inflated the company's assets by roughly:",o:["$1 billion","$12 billion","$50 billion","$100 million"],a:1,x:"WorldCom, once the second-largest U.S. long-distance carrier, filed for bankruptcy on July 21, 2002 and emerged as MCI in April 2004."},
+{ch:1,t:"mc",q:"Lehman Brothers Scenario One (early 2008) describes:",o:["A successful breakout from a big base","Failure to break out of a big base after the breakout at 66 on Feb 1, 2008","A bullish catapult","A double bottom buy"],a:1,x:"LEH gave its third straight double top buy at 66 but quickly failed at resistance. The all-time peak was 86 in February 2007."},
+{ch:1,t:"mc",q:"Lehman Brothers Scenario Two (May 2008) describes:",o:["A failure to penetrate the bearish resistance line","A golden cross","A new all-time high","A successful retest of support"],a:0,x:"LEH failed at the bearish resistance line in May 2008, dropped to 0 for 5, and was recommended as a short at 43 to 46 on May 9, 2008. It fell 73% from the 2007 peak."},
+{ch:1,t:"mc",q:"In the Starbucks example, as the price fell during 2007 and 2008 the S&P STARS fundamental rating was:",o:["1 or 2 stars (sell)","4 or 5 stars (buy)","Not published","3 stars (hold)"],a:1,x:"Technicals typically lead fundamentals. In late May 2009 the tech attributes rose to 3 as the STARS rating was lowered to 2: two ships passing in the night."},
+{ch:1,t:"mc",q:"Which breadth measures showed deterioration in late 2021 ahead of the 2022 bear market?",o:["NYSE new highs minus new lows and the NYSE Advance-Decline line","P/E ratios","Dividend yields","GDP growth"],a:0,x:"New highs minus new lows went negative in December 2021 (down to -254) and the A/D line peaked in November 2021."},
+{ch:1,lg:1,t:"mc",q:"Midterm Exam 1 for FINC 446 in Fall 2026 is on:",o:["Thursday, October 8, 2026","Thursday, November 19, 2026","Monday, December 7, 2026","Tuesday, December 8, 2026"],a:0,x:"Midterm 2 is November 19. The final presentations are December 7 and 8 by section."},
+{ch:1,lg:1,t:"mc",q:"The Final Exam for this course is:",o:["A 200-question multiple choice test","The Capstone Group Portfolio Management Project Presentation","A take-home essay","An Interactive Brokers trading contest"],a:1,x:"No late final project write-ups are accepted because of grade reporting requirements."},
+{ch:1,lg:1,t:"mc",q:"What share of the course grade is the Final Exam?",o:["20%","25%","30%","40%"],a:2,x:"Attendance 5%, Darvas book 5%, guest speakers 5%, charting/problem sets/trading 15%, each midterm 20%, final 30%."},
+{ch:1,lg:1,t:"mc",q:"An assignment submitted 1 day late receives a penalty of:",o:["10%","20%","50%","100%"],a:1,x:"1 day late: 20% penalty, max score 80%. Beyond 2 days late: 100% penalty."},
+{ch:1,lg:1,t:"mc",q:"A student who misses 5 classes receives what attendance grade?",o:["5%","4%","3%","1%"],a:2,x:"0 to 2 missed: 5%. 3 to 4: 4%. 5: 3%. 6: 1%. 7 or more: 0%."},
+{ch:1,t:"tf",q:"Technical analysis is widely used by practitioners, and its popularity is mirrored in the academic community.",a:false,x:"Its popularity is not mirrored in academia; the survey shows instructors rating charting 1.80 versus practitioners 3.56."},
+{ch:1,t:"tf",q:"Per the 3Ps philosophy, price is fact, while most fundamental data are estimates subject to revision.",a:true,x:"Facts over feelings or opinions."},
+{ch:1,lg:1,t:"tf",q:"Interactive Brokers paper trading accounts in the course start with $1,000,000 of simulated cash.",a:true,x:"The home page after login shows $1,000,000 settled cash and $4,000,000 buying power."},
+{ch:1,t:"tf",q:"Goldman Sachs removed Enron from its Recommend List in March 2001, well before the collapse.",a:false,x:"Goldman reiterated its Recommend List as late as October 3, 2001 at $33.49, and cut to market perform only on November 21 at $5.01."},
+{ch:1,t:"tf",q:"Technical analysis provides the tools to navigate the gap between intrinsic value and market price.",a:true,x:"Intrinsic value comes from accounting and valuation estimates; price comes from sentiment and supply and demand."},
+{ch:1,lg:1,t:"tf",q:"Attendance is taken on midterm exam days and counts toward the attendance grade.",a:false,x:"The two midterm sessions do not count toward attendance."},
+{ch:1,t:"tf",q:"Kathryn Kaminski's March 2020 quote, 'we don't know what's going on,' illustrates how hard forecasting is during extreme volatility.",a:true,x:"A 4.5% up day followed by a 2% down day told Wall Street's pros nothing."},
+
+// ---------- CHAPTER 2: BEING RIGHT OR MAKING MONEY ----------
+{ch:2,t:"mc",q:"Ned Davis's four real keys to making money are:",o:["Forecasting, timing, leverage, patience","Objective indicators, discipline, flexibility, risk management","Value, growth, momentum, quality","Earnings, revenue, margins, cash flow"],a:1,x:"Being Right or Making Money, Chapter 1."},
+{ch:2,t:"mc",q:"Ned Davis admits his biggest mistake was:",o:["Over-diversifying","Failure to cut losses","Trading too rarely","Ignoring fundamentals"],a:1,x:"His results and his sanity improved when he implemented a timing model."},
+{ch:2,t:"mc",q:"The common thread among the famous traders Davis lists is that they:",o:["Forecast better than anyone","Use objective methods and are disciplined","Never lose money","Trade only fundamentals"],a:1,x:"Objective methods plus discipline, not superior forecasting."},
+{ch:2,t:"mc",q:"According to Davis, the opposite of discipline is:",o:["Flexibility","Chaos","Patience","Leverage"],a:1,x:"Investors must remain faithful to their systems through good and bad times."},
+{ch:2,t:"mc",q:"Which key is described as 'seemingly at odds with discipline'?",o:["Objective indicators","Risk management","Flexibility","Money management"],a:2,x:"Indicators change; when wrong, change course; change your mind when the evidence shifts."},
+{ch:2,t:"mc",q:"On October 19, 1987, after shifting to 130% long the day before the crash, Stan Druckenmiller:",o:["Held and waited for a rebound","Liquidated his entire long position in the first hour and went short, finishing the month with a net gain","Added to his longs","Closed his fund"],a:1,x:"Schwager in Market Wizards: if you make a mistake, respond immediately. Flexibility was key."},
+{ch:2,t:"mc",q:"Barton Biggs called which investor 'the investment equivalent of Michael Jordan'?",o:["Paul Tudor Jones","Ned Davis","Stan Druckenmiller","Jim Rogers"],a:2,x:"Biggs: very intellectual and analytical, but also using technical analysis."},
+{ch:2,t:"mc",q:"At the start of 1989 Paul Tudor Jones was bearish on both the U.S. and Japan. He was wrong on both and that year he:",o:["Lost 20%","Broke even","Was up 42%","Closed his fund"],a:2,x:"Being wrong does not prevent making money when risk is managed. He has had no losing year since 1984."},
+{ch:2,t:"mc",q:"'I am always thinking about losing money as opposed to making money' is a quote from:",o:["Warren Buffett","Paul Tudor Jones","Alan Greenspan","John Kenneth Galbraith"],a:1,x:"From Market Wizards. He is widely known as a risk taker."},
+{ch:2,t:"mc",q:"Which is NOT one of the four negative behaviors listed in the September 12, 2013 issue of The Chartist?",o:["Failing to take losses","Being overly fearful at market bottoms and overly optimistic at tops","Using stop losses","Not following a disciplined strategy"],a:2,x:"The fourth is failing to take responsibility for your own money."},
+{ch:2,t:"mc",q:"Ned Davis's favorite theory holds that crowd psychology and liquidity (potential demand) are:",o:["Positively correlated","Unrelated","Inversely related","Identical"],a:2,x:"Increasing optimism means falling liquidity; rising pessimism means rising liquidity."},
+{ch:2,t:"mc",q:"Rule 1 of the Ned Davis Research Group's nine rules is:",o:["Don't fight the Fed","Don't fight the tape","Beware of the crowd at extremes","Rely on objective indicators"],a:1,x:"Rule 2 is Don't fight the Fed; Rule 3 is Beware of the crowd at extremes."},
+{ch:2,t:"mc",q:"Under Don't Fight the Tape, NDR models are at least ___ trend sensitive.",o:["10%","25%","50%","90%"],a:2,x:"The tape provides a stop-loss for should-be beliefs."},
+{ch:2,t:"mc",q:"Under Don't Fight the Fed, inflationary pressures lead to Fed tightness, which shows up as:",o:["Falling commodities and a rising dollar","Up commodities, up gold, down dollar, rising real interest rates","Lower real rates","Falling gold"],a:1,x:"Disinflation leads to Fed ease. Rates dropping is good, rising is bad."},
+{ch:2,t:"mc",q:"Davis compares liquidity to:",o:["A speedometer","A shock absorber on a car","A brake pedal","A fuel gauge"],a:1,x:"Extreme optimism equals low cash; extreme fear equals high cash."},
+{ch:2,t:"mc",q:"The top of a market is the point of maximum ___ and the bottom is the point of maximum ___.",o:["volume; volume","pessimism; optimism","optimism; pessimism","liquidity; illiquidity"],a:2,x:"Valuation measures long-term extremes in psychology."},
+{ch:2,t:"mc",q:"Under Practice Risk Management, Davis says winners make ___ mistakes and losers make ___ mistakes.",o:["no; some","small; big","big; small","many; few"],a:1,x:"We are in the business of making mistakes; keep them small with stop losses and trend-sensitive indicators."},
+{ch:2,t:"mc",q:"Which is an example of dynamic modeling cited under Remain Flexible?",o:["Fixed price targets","Standard deviation brackets","Annual rebalancing","Buy and hold"],a:1,x:"Indicators change, data is revised, scenarios change; review models on an objective and timely basis."},
+{ch:2,t:"mc",q:"Under Money Management Rules, Davis says to think in terms of risks, including:",o:["The risk of paying taxes","The risk of missing a bull market","The risk of trading too little","The risk of too much diversification"],a:1,x:"Also: let profits run, cut losses short; buy on the rumor, sell on the news."},
+{ch:2,t:"mc",q:"In the NDR research wheel, Technical and Sentiment together address:",o:["Expectations: how the market should be acting","Timing: how the market is acting","Valuation","Macro policy"],a:1,x:"Macro and Fundamental address expectations (how the market should act); Technical and Sentiment address timing (how it is acting)."},
+{ch:2,t:"mc",q:"Galbraith's two classes of forecasters are:",o:["Bulls and bears","Those who don't know and those who don't know they don't know","Technicians and fundamentalists","Professionals and amateurs"],a:1,x:"William Bernstein adds a third: the professional who knows they don't know but whose livelihood depends on appearing to know."},
+{ch:2,t:"mc",q:"Leo Melamed said he could be wrong ___ of the time and still come out a big winner because of money management.",o:["10 percent","30 percent","60 percent","90 percent"],a:2,x:"Take losses quickly, keep them small, and let profits run."},
+{ch:2,t:"mc",q:"Bob Farrell: 'When all the experts and forecasts agree...'",o:["Buy immediately","Something else is going to happen","The trend will continue","Volume will confirm"],a:1,x:"Process over consensus."},
+{ch:2,t:"mc",q:"R in a trading system is defined as:",o:["The expected return","The initial risk on a trade: entry price minus stop price, times position size","The realized profit","The reward-to-risk target"],a:1,x:"R is based on initial risk, not a stop that is widened later."},
+{ch:2,t:"mc",q:"A trade that is stopped out at the original risk level is a:",o:["+1R outcome","0R outcome","-1R outcome","-2R outcome"],a:2,x:"R-multiple = trade P&L divided by initial risk. A full initial-risk loss is -1R."},
+{ch:2,t:"mc",q:"Risk/reward is a ___ while R-multiple is the ___.",o:["result; plan","plan; result","guess; forecast","target; stop"],a:1,x:"A trader may plan for +3R and exit at +1.2R, -1R, or +4R. Track both to separate system design from execution."},
+{ch:2,t:"mc",q:"Position size in a rules-based system is:",o:["A confidence vote","An output of account risk and stop distance","Fixed at 100 shares","Based on margin available"],a:1,x:"Set dollar risk first; derive size second. Wider stops imply smaller positions."},
+{ch:2,t:"mc",q:"The MAR ratio, also called the Recovery Ratio, is:",o:["Net profit percent divided by max drawdown percent, and should be above 1.0","Average win divided by average loss","Excess return divided by standard deviation","Gross profit divided by gross loss"],a:0,x:"Max drawdown is the maximum loss from an equity peak."},
+{ch:2,t:"mc",q:"The Sharpe Ratio is:",o:["Net profit divided by gross profit","Excess return (portfolio return minus T-bill return) divided by the standard deviation of the excess return","Total profit divided by total loss","Average winner divided by average loser"],a:1,x:"Excess return over the T-bill rate per unit of volatility."},
+{ch:2,t:"mc",q:"Profit factor is total profit divided by total loss and must be greater than ___, preferably over ___.",o:["0.5; 1.0","1.0; 2.0","2.0; 3.0","1.5; 5.0"],a:1,x:"The Monte Carlo slide calls a profit factor above 1.5 strong."},
+{ch:2,t:"mc",q:"The largest winning trade should not exceed what share of total profit?",o:["5% to 10%","20% to 25%","40% to 50%","75%"],a:2,x:"Outlier-adjusted profit to loss removes anomalous trades."},
+{ch:2,t:"mc",q:"In trend-following systems the percentage of winning trades is often only ___, and any percentage above ___ is suspect.",o:["60% to 80%; 95%","30% to 50%; 70%","10% to 20%; 50%","50% to 60%; 90%"],a:1,x:"Low win rates are normal when winners are much larger than losers."},
+{ch:2,t:"mc",q:"For trend-following systems the payoff ratio (average winning trade to average losing trade) should be greater than:",o:["1.0","1.5","2.0","5.0"],a:2,x:"Payoff ratio is distinct from profit factor (total profit to total loss)."},
+{ch:2,t:"mc",q:"Efficiency factor is:",o:["Net profit divided by gross profit","Gross profit divided by net profit","Wins divided by losses","Profit divided by drawdown"],a:0,x:"It measures how much of gross profit remains after losses and trading costs."},
+{ch:2,t:"mc",q:"The primary use of maximum favorable and adverse excursion is to:",o:["Set position size","Give hints for where trailing stops should be","Compute the Sharpe ratio","Measure win rate"],a:1,x:"They also show equity curve smoothness and where losing trades occur."},
+{ch:2,t:"mc",q:"Professional traders target a Probability of Profit (POP) above:",o:["50%","65%","80%","95%"],a:1,x:"World-class strategies reach 80% or more."},
+{ch:2,t:"mc",q:"Risk of Ruin is the probability that the account:",o:["Ends the simulation below starting capital","Ever drops below the chosen ruin threshold at any point, even if it later recovers","Has a losing month","Has more losers than winners"],a:1,x:"Thresholds of 30%, 50%, or 70% of starting capital. Even profitable strategies can carry ruin risk with aggressive sizing."},
+{ch:2,t:"mc",q:"Which Monte Carlo metric is used as the stress test?",o:["Median max drawdown","95th percentile max drawdown","Median profit factor","Expected value"],a:1,x:"Only 5% of outcomes are worse. If you can't survive it, reduce risk per trade."},
+{ch:2,t:"mc",q:"Most professional traders require a reward-to-risk ratio of at least:",o:["1:1","1:1.5","1:3","1:5"],a:1,x:"Many target 1:2 or higher to offset lower win rates."},
+{ch:2,t:"tf",q:"A system can have a win rate below 50% and still have a positive expectancy if its average winner is large enough.",a:true,x:"Expectancy = (win rate × avg win in R) − (loss rate × avg loss in R). Win rate alone does not define a good system."},
+{ch:2,t:"tf",q:"Given the same dollar risk, a wider stop permits a larger position.",a:false,x:"Wider stops imply smaller positions; tighter stops permit larger positions."},
+{ch:2,t:"tf",q:"R should be recalculated whenever a stop is widened after entry.",a:false,x:"R is based on the initial risk, defined before the order is placed."},
+{ch:2,t:"tf",q:"Davis says our success must not depend on our ability to forecast markets.",a:true,x:"Use tools to get an idea of direction, but be ready with strategies to react when wrong."},
+{ch:2,t:"tf",q:"Rule 9 says to go back as far as possible in history and use bull, bear, and neutral cycles.",a:true,x:"Those who do not study history are condemned to repeat its mistakes."},
+{ch:2,t:"num",q:"You buy at $50 with a stop at $47.50 and 100 shares. What is 1R in dollars?",a:250,tol:0.01,u:"$",x:"(50 − 47.50) × 100 = <b>$250</b>."},
+{ch:2,t:"num",q:"A trade risked $100 and made $500. What is the R-multiple?",a:5,tol:0.01,u:"R",x:"500 / 100 = <b>+5R</b>. The same $500 on $1,000 of risk is only +0.5R."},
+{ch:2,t:"num",q:"A trade risked $1,000 and made $500. What is the R-multiple?",a:0.5,tol:0.01,u:"R",x:"500 / 1,000 = <b>+0.5R</b>."},
+{ch:2,t:"num",q:"$25,000 account, 1% risk limit, entry $50, stop $47.50. How many shares?",a:100,tol:0.5,u:"shares",x:"Dollar risk = $250. Risk per share = $2.50. 250 / 2.50 = <b>100 shares</b>."},
+{ch:2,t:"num",q:"$50,000 account, 2% risk per trade, entry $80, stop $76. How many shares?",a:250,tol:0.5,u:"shares",x:"Dollar risk = $1,000. Risk per share = $4. 1,000 / 4 = <b>250 shares</b>."},
+{ch:2,t:"num",q:"A system wins 40% of the time with an average win of +3R and loses 60% of the time with an average loss of 1R. What is the expectancy in R? (two decimals)",a:0.6,tol:0.01,u:"R",x:"(0.40 × 3) − (0.60 × 1) = 1.2 − 0.6 = <b>+0.6R</b>."},
+{ch:2,t:"num",q:"A system wins 30% of the time with an average win of +2R and loses 70% of the time with an average loss of 1R. What is the expectancy in R? (two decimals, negative if a loss)",a:-0.1,tol:0.01,u:"R",x:"(0.30 × 2) − (0.70 × 1) = 0.6 − 0.7 = <b>−0.1R</b>. Below the breakeven curve."},
+{ch:2,t:"num",q:"Win rate 35%, average win $300, average loss $100. What is the expected value per trade in dollars?",a:40,tol:0.01,u:"$",x:"EV = (0.35 × 300) − (0.65 × 100) = 105 − 65 = <b>$40</b>."},
+{ch:2,t:"num",q:"Gross profit $30,000, gross loss $12,000. What is the profit factor? (two decimals)",a:2.5,tol:0.01,u:"",x:"30,000 / 12,000 = <b>2.5</b>, above the preferred 2.0."},
+{ch:2,t:"num",q:"Average winning trade $600, average losing trade $250. What is the payoff ratio? (two decimals)",a:2.4,tol:0.01,u:"",x:"600 / 250 = <b>2.4</b>, above the 2.0 threshold for trend-following systems."},
+{ch:2,t:"num",q:"Net profit 24%, maximum drawdown 8%. What is the MAR ratio? (two decimals)",a:3,tol:0.01,u:"",x:"24 / 8 = <b>3.0</b>, well above 1.0."},
+{ch:2,t:"num",q:"Portfolio return 12%, T-bill return 4%, standard deviation of excess return 16%. What is the Sharpe ratio? (two decimals)",a:0.5,tol:0.01,u:"",x:"(12 − 4) / 16 = <b>0.50</b>."},
+{ch:2,t:"num",q:"Net profit $40,000, gross profit $100,000. What is the efficiency factor? (two decimals)",a:0.4,tol:0.01,u:"",x:"40,000 / 100,000 = <b>0.40</b>."},
+
+// ---------- CHAPTER 3: BEHAVIORAL FINANCE & TRADER PSYCHOLOGY ----------
+{ch:3,t:"mc",q:"Traditional finance models people as ___, while behavioral finance models people as ___.",o:["normal; rational","rational; normal","emotional; logical","greedy; fearful"],a:1,x:"Traditional: risk-averse, utility-maximizing, Markowitz, CAPM, Modigliani-Miller, option pricing. Behavioral: observed behavior, challenges EMH."},
+{ch:3,t:"mc",q:"Daniel Kahneman's contribution, recognized with the 2002 Nobel Prize, was:",o:["Inventing the candlestick chart","Integrating psychological research into economics and showing that judgment uses heuristics that depart from probability theory","Developing CAPM","Proving markets are efficient"],a:1,x:"Prospect Theory with Tversky, Econometrica 1979."},
+{ch:3,t:"mc",q:"Which type of behavioral bias can be eliminated through better information, advice, and education?",o:["Emotional biases","Cognitive errors","Both equally","Neither"],a:1,x:"Emotional biases are harder to correct because they arise from an emotional framework."},
+{ch:3,t:"mc",q:"The two subcategories of cognitive errors are:",o:["Fear and greed","Belief perseverance biases and processing errors","Loss aversion and overconfidence","Anchoring and framing"],a:1,x:"Belief perseverance: conservatism, confirmation, representativeness, illusion of control, hindsight. Processing: anchoring, mental accounting, framing, availability, recency."},
+{ch:3,t:"mc",q:"Cognitive dissonance is:",o:["Trading on emotion","The mental discomfort that arises when new information conflicts with previously held beliefs","Overvaluing what you own","Fear of regret"],a:1,x:"It drives belief perseverance biases."},
+{ch:3,t:"mc",q:"A head and shoulders top has formed and the neckline has broken, but you stick with your bullish long-term forecast. This is:",o:["Conservatism bias","Endowment bias","Framing bias","Self-control bias"],a:0,x:"Conservatism: inadequately incorporating new, conflicting information; overweighting current beliefs."},
+{ch:3,t:"mc",q:"An analyst downgrades your long position and you don't read the report, but you immediately read and agree with another analyst's upgrade the same day. This is:",o:["Recency bias","Confirmation bias","Hindsight bias","Status quo bias"],a:1,x:"Confirmation: seek what confirms prior beliefs and ignore what contradicts them. Leads to under-diversification."},
+{ch:3,t:"mc",q:"You recommend shorting in September because most Septembers over the past 10 years were down, despite a bullish double bottom and strong breadth. This is:",o:["Representativeness bias","Anchoring bias","Mental accounting","Regret aversion"],a:0,x:"Representativeness: classifying new information by past experience and overweighting small samples; typical of seasonality errors."},
+{ch:3,t:"mc",q:"Researchers found portfolio turnover is negatively correlated with investment returns. Excess trading is a consequence of:",o:["Status quo bias","Illusion of control bias","Framing bias","Availability bias"],a:1,x:"Illusion of control: believing you can influence outcomes you cannot. Also leads to overly detailed models and under-diversified portfolios."},
+{ch:3,t:"mc",q:"Looking at a 20-year S&P 500 chart and concluding that the 2000 and 2007 tops were obvious from trendline breaks and death crosses is:",o:["Hindsight bias","Conservatism bias","Endowment bias","Loss aversion"],a:0,x:"Hindsight: believing past events were predictable when they were not; leads to unfair assessment of managers."},
+{ch:3,t:"mc",q:"You bought at $40, the stock is at $30 with analysis pointing to $20, but you plan to sell at $40 to break even. This is:",o:["Anchoring bias","Availability bias","Self-control bias","Overconfidence"],a:0,x:"Anchoring: fixating on a purchase price that has meaning only to you and no bearing on the future path of the stock."},
+{ch:3,t:"mc",q:"Treating a $5,000 gain from a speculative stock as 'house money' and risking it more freely than $5,000 of salary is:",o:["Framing bias","Mental accounting bias","Recency bias","Regret aversion"],a:1,x:"Mental accounting ignores the fungibility of money and leads investors to disregard diversification."},
+{ch:3,t:"mc",q:"A stock described as having a '70% chance of a positive return' seems more attractive than one with a '30% chance of a loss.' This is:",o:["Framing bias","Anchoring bias","Hindsight bias","Endowment bias"],a:0,x:"Framing: answering based on how a question is asked. It can distort risk tolerance questionnaires and focus investors on short-term swings."},
+{ch:3,t:"mc",q:"After a highly publicized crash, an investor overestimates the chance of another immediate crash and stays underinvested. This is:",o:["Availability bias","Conservatism bias","Self-control bias","Status quo bias"],a:0,x:"Availability: judging probability by how easily an outcome is recalled; also choosing investments based on advertising or news volume."},
+{ch:3,t:"mc",q:"Buying a stock after it has risen sharply for several months because you expect the gains to persist, while ignoring long-term history, is:",o:["Recency bias","Endowment bias","Illusion of control","Representativeness bias"],a:0,x:"Recency leads to performance chasing and underestimating mean reversion."},
+{ch:3,t:"mc",q:"Investors dislike losses at roughly what multiple of the rate they enjoy an equal gain?",o:["Half","Equal","About double","Ten times"],a:2,x:"Loss aversion explains complacency at tops and panic as investors fear losses."},
+{ch:3,t:"mc",q:"Holding losing positions too long and selling winners too early is called the:",o:["Halo effect","Disposition effect","Momentum effect","Endowment effect"],a:1,x:"The disposition effect is the main consequence of loss aversion."},
+{ch:3,t:"mc",q:"In the Prospect Theory value function, gains provide positive value at a diminishing rate while losses:",o:["Create negative value that is steeper and more powerful","Are ignored","Have the same curve shape as gains","Create positive value"],a:0,x:"Tversky and Kahneman (1979): evaluations of gains and losses are relative to a reference point, and the curve is asymmetrical."},
+{ch:3,t:"mc",q:"Taking too much credit for successes (self-enhancing) and blaming others for failures (self-protecting) is:",o:["Self-attribution bias","Self-control bias","Regret aversion","Status quo bias"],a:0,x:"Self-attribution intensifies overconfidence."},
+{ch:3,t:"mc",q:"Trading more frequently and taking larger positions than skill justifies after a few successful trades is:",o:["Overconfidence bias","Endowment bias","Availability bias","Mental accounting"],a:0,x:"Overconfidence: underestimating risks, overestimating expected values, and holding poorly diversified portfolios."},
+{ch:3,t:"mc",q:"Abandoning a disciplined plan to chase short-term opportunities, or borrowing too much for current consumption, reflects:",o:["Self-control bias","Status quo bias","Framing bias","Conservatism bias"],a:0,x:"Self-control: favoring short-term goals over long-term goals due to a lack of discipline."},
+{ch:3,t:"mc",q:"Leaving a portfolio unchanged simply because it is the current allocation, even when rebalancing is warranted, is:",o:["Status quo bias","Regret aversion","Endowment bias","Anchoring"],a:0,x:"Accepting the default is easy and comfortable. Leads to holding outdated investments."},
+{ch:3,t:"mc",q:"Placing a higher value on a stock simply because you already own it is:",o:["Endowment bias","Loss aversion","Overconfidence","Availability bias"],a:0,x:"Endowment leads to holding familiar or inherited investments too long."},
+{ch:3,t:"mc",q:"Avoiding selling a loser for fear it will rebound right after, or avoiding a purchase for fear it will fall, is:",o:["Regret aversion bias","Hindsight bias","Framing bias","Mental accounting"],a:0,x:"Regret aversion leads to herding into popular assets, inaction, and excessive conservatism."},
+{ch:3,t:"mc",q:"Market anomalies are:",o:["Random price moves","Apparent deviations from the efficient market hypothesis identified by persistent abnormal returns predictable in direction","Any losing trade","Proof that markets are irrational"],a:1,x:"Not all deviations are anomalies; some reflect model choice, small samples, survivorship bias, or data mining."},
+{ch:3,t:"mc",q:"Studies show the momentum correlation usually lasts about how long before reverting to the mean?",o:["Two weeks","Two months","Two years","Ten years"],a:2,x:"Availability, hindsight, and loss aversion biases can all contribute to momentum."},
+{ch:3,t:"mc",q:"Value stocks are characterized by:",o:["Low book-to-market and high P/E","High book-to-market equity, low P/E, and low price-to-dividend ratios","High growth rates","High volatility"],a:1,x:"Growth stocks are usually the opposite."},
+{ch:3,t:"mc",q:"Fama and French (1998) found the value anomaly disappears in a three-factor model, suggesting:",o:["Value investing never works","Size and book-to-market factors reflect compensation for increased risk","Markets are inefficient","Growth always wins"],a:1,x:"Other studies argue the anomaly is mispricing driven by behavioral factors."},
+{ch:3,t:"mc",q:"The halo effect, where favorable evaluation of certain characteristics is extended to others, is a case of:",o:["Representativeness bias","Framing bias","Status quo bias","Self-control bias"],a:0,x:"Overconfidence, separately, can lead to overvaluing growth stocks."},
+{ch:3,t:"mc",q:"Overtrading, underestimating risks, failing to diversify, and rejecting contradictory information during bubbles are symptoms of:",o:["Overconfidence and self-attribution biases","Status quo bias","Regret aversion","Mental accounting"],a:0,x:"As bubbles loosen, cognitive dissonance causes belief perseverance and underreaction."},
+{ch:3,t:"mc",q:"In the CMT case study, which bias explains Jack blaming Les for the losing position even though he traded within his risk rules?",o:["Attribution bias","Endowment bias","Recency bias","Anchoring"],a:0,x:"Jack's bad mood also framed his decision to blow out the position into an illiquid market."},
+{ch:3,t:"mc",q:"In the case study, Les sticks to his bullish semiconductor view despite the relative strength line breaking support. The answer key attributes this to:",o:["Regret aversion and overconfidence","Mental accounting and framing","Availability and recency","Status quo and endowment"],a:0,x:"Regret aversion (sticking to the view despite evidence) and overconfidence (belief in Moore's Law clouding judgment)."},
+{ch:3,t:"mc",q:"Which bias is classified as emotional rather than cognitive?",o:["Anchoring","Hindsight","Overconfidence","Framing"],a:2,x:"Emotional biases: loss aversion, overconfidence, self-control, status quo, endowment, regret aversion."},
+{ch:3,t:"mc",q:"Which bias is a processing error rather than a belief perseverance bias?",o:["Conservatism","Confirmation","Illusion of control","Availability"],a:3,x:"Processing errors: anchoring, mental accounting, framing, availability, recency."},
+{ch:3,t:"tf",q:"Technical analysis is behavioral finance.",a:false,x:"TA is not behavioral finance, but it can help organize and observe behavioral evidence: price, volume, support/resistance, and sentiment are footprints of collective behavior."},
+{ch:3,t:"tf",q:"Behavioral finance gives a complete explanation of bubbles and crashes.",a:false,x:"It does not, though cognitive and emotional biases are present during those periods."},
+{ch:3,t:"tf",q:"Higher dollar volume around lows and diminishing volume as tops develop is cited as evidence of loss aversion.",a:true,x:"Panic at lows, complacency at tops."},
+{ch:3,t:"tf",q:"Behavioral finance at the macro level studies market-wide effects such as anomalies.",a:true,x:"The micro level covers individual cognitive errors and emotional biases."},
+{ch:3,t:"tf",q:"Regret aversion can lead investors to herd into popular assets.",a:true,x:"Following the crowd reduces the fear of being wrong alone."},
+
+// ---------- CHAPTER 4: DOW THEORY ----------
+{ch:4,t:"mc",q:"On what date did the first version of the Dow Jones Industrial Average appear in the Wall Street Journal?",o:["July 3, 1884","May 10, 1869","May 26, 1896","January 1, 1902"],a:2,x:"The first DJIA was published <b>May 26, 1896</b> with 12 stocks. July 3, 1884 was Dow's first index (mostly railroads); May 10, 1869 was the Golden Spike."},
+{ch:4,t:"mc",q:"Dow's first stock index, published July 3, 1884, was a price-weighted average of:",o:["12 industrial stocks","9 railroad stocks and 2 industrials","30 blue-chip stocks","20 transportation stocks"],a:1,x:"The 1884 index held 9 railroads and 2 industrials. By 1886 it was 10 railroads and 2 industrials."},
+{ch:4,t:"mc",q:"Who refined Dow Theory and presented three hypotheses in a 1932 book?",o:["William Peter Hamilton","Robert Rhea","S.A. Nelson","Alfred Cowles III"],a:1,x:"Robert Rhea's <i>Dow Theory</i> (1932) presented the three hypotheses. Hamilton and Nelson formalized Dow's editorials earlier."},
+{ch:4,t:"mc",q:"According to Rhea's first hypothesis, which trend is inviolate (cannot be manipulated)?",o:["The minor trend","The secondary trend","The primary trend","All three trends"],a:2,x:"Secondary and minor day-to-day moves could possibly be manipulated; the <b>primary trend</b> cannot."},
+{ch:4,t:"mc",q:"A secondary trend typically retraces what portion of the primary price move?",o:["10% to 20%, 15% typical","33% to 66%, 50% typical","75% to 100%, 90% typical","It does not retrace the primary move"],a:1,x:"Secondary trends retrace 33% to 66% of the primary move, with 50% being typical, and last a few weeks to months."},
+{ch:4,t:"mc",q:"Which sequence lists the three phases of a primary bull market?",o:["Distribution, public participation, panic","Accumulation, public participation, excess","Excess, accumulation, distribution","Panic, accumulation, public participation"],a:1,x:"Bull: accumulation, big move/public participation, excess. Option A is the bear sequence (distribution, public participation, panic/despair)."},
+{ch:4,t:"mc",q:"The DJIA closes at a new high but the DJTA stays below its previous high. Dow Theory reads this as:",o:["A confirmed primary uptrend","A confirmed primary downtrend","A guaranteed reversal","A non-confirmation and caution signal, not by itself a reversal"],a:3,x:"One average alone cannot establish a trend. Divergence is an early warning of weakening, not a guaranteed reversal."},
+{ch:4,t:"mc",q:"Which price is the only one recognized in Dow Theory?",o:["The open","The intraday high","The close","The volume-weighted average price"],a:2,x:"Only closing prices count. Confirmation focuses on price closes, not intraday moves."},
+{ch:4,t:"mc",q:"In Dow Theory, volume is best described as:",o:["The primary consideration that overrides price","A secondary confirmation that price trend and confirmation override","Irrelevant to trend analysis","A stand-alone reversal signal"],a:1,x:"Volume is a confirming indicator. Price trend and confirmation override volume."},
+{ch:4,t:"mc",q:"In the Brown, Goetzmann, and Kumar study, what happened to the money when the Dow Theory signal turned bearish?",o:["It shorted the index","It moved into fixed-income instruments","It bought put options","It doubled the equity position"],a:1,x:"Bullish: a hypothetical index fund. Bearish: fixed income. Avoiding bear markets is what cut the risk."},
+{ch:4,t:"mc",q:"Over 1980 to 1998, the Dow Theory system in the study:",o:["Beat buy-and-hold by 2.6% per year in raw returns","Underperformed by 2.6% per year but outperformed on a risk-adjusted basis","Matched buy-and-hold exactly","Was not tested"],a:1,x:"Raw underperformance of 2.6% per year, but better risk-adjusted returns. It outperforms in bear markets and lags in bull markets."},
+{ch:4,t:"mc",q:"Over the full 1929 to 1998 period, the Dow Theory system outperformed buy-and-hold by about:",o:["0.5% per year","2% per year","5% per year","10% per year"],a:1,x:"About 2% per year over 70 years, with significantly less risk and even better risk-adjusted results."},
+{ch:4,t:"mc",q:"In the original Dow Theory framework, a signal from the Dow Jones Industrial Average had to be confirmed by the:",o:["S&P 500","Dow Jones Transportation Average","Nasdaq Composite","Russell 2000"],a:1,x:"Industrials and transports (originally rails). If industrials sell more goods, transports should move those goods."},
+{ch:4,t:"mc",q:"The minor trend in Dow Theory typically lasts:",o:["Days to weeks, and is considered noise","Weeks to months","A year or longer","Several years"],a:0,x:"Minor trends are short-term fluctuations lasting days to weeks. The market is not logical day to day, so they are treated as noise."},
+{ch:4,t:"mc",q:"The third phase of a primary bear market is called:",o:["Accumulation","Distribution","Despair / lack of interest","Public participation"],a:2,x:"Bear phases: distribution, big move/public participation, then panic/despair, where fear-driven liquidation takes over and contrarians begin to accumulate."},
+{ch:4,t:"mc",q:"The lecture describes Dow Theory as less about prediction and more about:",o:["Speculation","Validation","Valuation","Manipulation"],a:1,x:"The critical word is confirmation. A trend is validated only when both averages agree."},
+{ch:4,t:"mc",q:"Which bull market phase is usually the longest and carries the largest price advance?",o:["Accumulation","Public participation","Excess / distribution","Panic"],a:1,x:"Public participation: the uptrend becomes visible, fundamentals improve, and a wider range of investors joins."},
+{ch:4,t:"mc",q:"Which is a stated criticism of Dow Theory?",o:["It ignores closing prices","Signals lag changes in trend, so investors act after tops and bottoms","It relies too heavily on volume","It only works on intraday charts"],a:1,x:"Signals lag, which reduces profits but also reduces risk. Other criticisms: trends are not strictly defined and the requirements are too specific."},
+{ch:4,t:"mc",q:"During the distribution phase of a bear market, prices can remain resilient because:",o:["Volume has dried up","Many investors are still buying while smart money sells","The Fed is cutting rates","Transports have already confirmed"],a:1,x:"Informed investors sell into lingering optimism while the public keeps buying, which makes this phase hard to recognize in real time."},
+{ch:4,t:"mc",q:"The Golden Spike that completed the first transcontinental railroad was driven on May 10, 1869 at:",o:["Omaha, Nebraska","Promontory Summit, Utah Territory","Sacramento, California","Cheyenne, Wyoming"],a:1,x:"Central Pacific and Union Pacific met at Promontory Summit. A telegraph wired to the spike flashed “DONE” nationwide."},
+{ch:4,t:"tf",q:"Under Dow Theory, confirmation by the second average must occur on the same day as the first.",a:false,x:"Confirmation does not need to occur on the same day, but it must come within a reasonable time window."},
+{ch:4,t:"tf",q:"Dow Theory presumes a trend remains in force until there is convincing, confirmed evidence of a reversal.",a:true,x:"Tenet 6: trends continue until a clear reversal is confirmed, favoring trend following over reacting to noise."},
+{ch:4,t:"tf",q:"Weak volume during a breakout signals strong conviction behind the move.",a:false,x:"Weak volume on a breakout, breakdown, or continuing trend signals limited conviction and deserves caution."},
+{ch:4,t:"tf",q:"In a downtrend, volume should decrease during an upside retracement.",a:true,x:"Volume should expand in the direction of the primary trend and contract on countertrend moves."},
+{ch:4,t:"tf",q:"Rhea's third hypothesis states that Dow Theory is infallible when applied correctly.",a:false,x:"Dow Theory is not infallible. It is a set of guidelines that requires serious, impartial study."},
+{ch:4,t:"tf",q:"The original 1896 DJIA contained 30 stocks.",a:false,x:"The original DJIA had 12 stocks (American Cotton Oil, General Electric, U.S. Rubber, and others). Today it has 30."},
+{ch:4,t:"tf",q:"A secondary trend runs in the same direction as the primary trend.",a:false,x:"A secondary trend runs counter to the primary trend and is described as a deceptive reaction to it."},
+{ch:4,t:"tf",q:"Modern application of the confirmation principle extends it to indexes such as the S&P 500, Nasdaq, and Russell 2000.",a:true,x:"The lecture shows S&P 500 vs Russell 2000, DIA vs IYT, and RSP vs QQQE as modern confirmation pairs."},
+
+// ---------- CHAPTER 5: HISTORY AND FOUNDATION ----------
+{ch:5,t:"mc",q:"Who is credited with inventing the candlestick chart?",o:["Joseph de la Vega","Homma Munehisa","Charles Dow","Richard Wyckoff"],a:1,x:"Homma Munehisa plotted rice prices in early 18th century Japan, when rice was used as currency."},
+{ch:5,t:"mc",q:"Confusion of Confusions, the first book on the Amsterdam Stock Exchange, was written by:",o:["Gustave Le Bon","Edwin Lefevre","Joseph de la Vega","Ralph Nelson Elliott"],a:2,x:"Joseph de la Vega, 17th century Amsterdam. He also plotted stock prices."},
+{ch:5,t:"mc",q:"Which author is considered the father of the Advance/Decline Line?",o:["Leonard P. Ayres","Lyman M. Lowry","Garfield Drew","Norman Fosback"],a:0,x:"Ayres pioneered market breadth. Lowry developed Buying Power and Selling Pressure; Drew popularized odd-lot activity."},
+{ch:5,t:"mc",q:"Technical Analysis of Stock Trends (1948), which cataloged chart patterns, was written by:",o:["Schabacker","Edwards and Magee","Hamilton and Nelson","Aronson"],a:1,x:"Edwards and Magee, 1948, the start of the modernization and systematization era."},
+{ch:5,t:"mc",q:"By the 1890s, the word “technical” in finance had come to describe:",o:["Words of art belonging to a profession","Market conditions such as overbought or oversold","Fundamental valuation methods","The mechanics of ticker tape machines"],a:1,x:"The term shifted from general professional language to a market concept describing artificial or structural conditions affecting prices."},
+{ch:5,t:"mc",q:"The two main functions of technical analysis are:",o:["Valuation and timing","Identification and forecasting","Prediction and manipulation","Accumulation and distribution"],a:1,x:"Identification describes past and present price action; forecasting infers future action on the assumption that patterns repeat."},
+{ch:5,t:"mc",q:"Which statement best describes the fundamentalist?",o:["Concerned with the effects of market moves rather than causes","Can tell you which company to buy but not the most advantageous moment to buy","Believes price reflects all available information","Focuses on chart patterns and momentum"],a:1,x:"The fundamentalist studies causes and intrinsic value and picks the company. The technician picks the timing."},
+{ch:5,t:"mc",q:"The strong form of the Efficient Market Hypothesis argues that:",o:["Charts reliably predict future prices","Prices already reflect all information, so profiting from it is futile","Only insiders can profit from technical analysis","Markets trend more often than they move randomly"],a:1,x:"Strong-form EMH: the price has already adjusted to new information. It is listed as a disadvantage of TA alongside the random walk argument."},
+{ch:5,t:"mc",q:"Effective technical analysis requires all of the following EXCEPT:",o:["Continuous trading","Reliable price discovery","Sufficient trading volume","Knowledge of the company's financial statements"],a:3,x:"No need to study fundamentals is an advantage of TA. The three market requirements are continuous trading, reliable price discovery, and sufficient volume."},
+{ch:5,t:"mc",q:"Option prices are generally not primary charting targets, but option markets provide valuable data on:",o:["Earnings quality and balance sheet strength","Implied volatility, put/call ratios, and open interest","Dividend yield and payout ratio","GDP and inflation expectations"],a:1,x:"These reveal market sentiment, risk perception, and positioning."},
+{ch:5,t:"mc",q:"Gustave Le Bon's late 19th century book The Crowd was influential because it introduced:",o:["Point-and-figure charting","Crowd psychology to market behavior analysis","The first stock index","Fibonacci ratios"],a:1,x:"<i>The Crowd: A Study of the Popular Mind</i> is the seminal work on crowd psychology."},
+{ch:5,t:"mc",q:"Richard Wyckoff outlined the price cycle as:",o:["Accumulation, markup, distribution, markdown","Open, high, low, close","Primary, secondary, minor","Bottom, top, breakout, reversal"],a:0,x:"Wyckoff's four phases: accumulation, markup, distribution, markdown."},
+{ch:5,t:"mc",q:"Ralph Nelson Elliott's The Wave Principle (1930s) introduced Elliott Waves and:",o:["Candlestick patterns","Moving average ribbons","Fibonacci relationships","The Advance/Decline Line"],a:2,x:"Elliott Waves with Fibonacci relationships."},
+{ch:5,t:"mc",q:"Reminiscences of a Stock Operator (1923), which features Jesse Livermore, was written by:",o:["Edwin Lefevre","Richard Schabacker","Humphrey Neil","Martin Zweig"],a:0,x:"Edwin Lefevre, 1923. Livermore developed practical charting and trading strategies."},
+{ch:5,t:"mc",q:"“The trend is your friend” was popularized in Winning on Wall Street (1986) by:",o:["Norman Fosback","Martin Zweig","Perry Kaufman","Thomas DeMark"],a:1,x:"Martin Zweig, 1986. Fosback wrote <i>Stock Market Logic</i> (1976)."},
+{ch:5,t:"mc",q:"Evidence-Based Technical Analysis (2007), which applied statistical rigor to trading signals, was written by:",o:["David R. Aronson","Perry J. Kaufman","Thomas R. DeMark","Charles Kirkpatrick"],a:0,x:"Aronson, 2007. Kaufman's <i>Trading Systems and Methods</i> came in 2013; DeMark won the CMT Annual Award in 2020."},
+{ch:5,t:"mc",q:"Which is NOT one of the four core asset classes for technical analysis named in the lecture?",o:["Stocks","Bonds","Real estate","Commodities"],a:2,x:"The four: stocks (equities), bonds (fixed income and rates), currencies (FX and crypto), commodities."},
+{ch:5,t:"mc",q:"Which of these is one of the five tradeable instrument types, defined as a mathematical average of a basket of assets?",o:["Futures","Index","Options","Cash (spot)"],a:1,x:"The five: cash (spot), futures, options, index, exchange-traded products (ETPs). An index is a mathematical average of a basket."},
+{ch:5,t:"mc",q:"Webster's 1828 dictionary derived “analysis” from the Greek meaning:",o:["To measure","To loosen","To predict","To record"],a:1,x:"Analysis, from Greek “to loosen”: the separation or examination of parts, opposed to synthesis."},
+{ch:5,t:"mc",q:"Smith's Financial Dictionary (1903) defined technical market conditions as price movements due to:",o:["Earnings surprises","Manipulation, short covering, or liquidation","Dividend announcements","Interest rate changes"],a:1,x:"Smith's 1903 definition tied technical conditions to manipulation, short covering, or liquidation."},
+{ch:5,t:"mc",q:"Charles Dow and Edward Jones launched The Wall Street Journal in:",o:["1869","1884","1889","1896"],a:2,x:"1889. The DJIA followed in 1896."},
+{ch:5,t:"mc",q:"Which approach to forecasting uses newspaper reports, magazines, and online bulletins to form an opinion about the market?",o:["Fundamental analysis","Technical analysis","Information analysis","Quantitative analysis"],a:2,x:"Information analysis is the third approach, next to fundamental and technical."},
+{ch:5,t:"mc",q:"The technical analyst is mainly concerned with:",o:["The causes of market moves","Intrinsic value","The effects of market moves and the structure and dynamics of price action","Whether an asset is under- or overvalued"],a:2,x:"Technicians study effects, not causes, and believe price reflects all available information."},
+{ch:5,t:"tf",q:"Technical analysis can usually determine whether a stock is under- or overvalued.",a:false,x:"Technicians usually cannot determine intrinsic value, but can determine when to participate from the perspective of price performance."},
+{ch:5,t:"tf",q:"Liquidity determines whether an instrument is useful for technical analysis.",a:true,x:"Not all asset class and instrument combinations are actively traded; liquidity decides usefulness."},
+{ch:5,t:"tf",q:"Technical tools behave identically across all asset classes, so no adaptation is needed.",a:false,x:"Each asset class has different volatility, trading hours, and supply and demand drivers. Analysts must adapt techniques."},
+{ch:5,t:"tf",q:"Thinly traded markets can produce erratic charts, false breakouts, and unreliable indicators.",a:true,x:"Rule of thumb: if price and volume are unreliable, technical signals are unreliable."},
+{ch:5,t:"tf",q:"Technical analysis is applicable across all markets, instruments, and timeframes because trends are fractal.",a:true,x:"Price patterns, oscillators, and overlays are treated the same way regardless of market or timeframe."},
+{ch:5,t:"tf",q:"Rice was used as currency in Japan at the time candlestick charts were invented.",a:true,x:"Homma Munehisa plotted rice prices; rice served as currency."},
+{ch:5,t:"tf",q:"The lecture lists subjectivity of interpretation as an advantage of technical analysis.",a:false,x:"Subjectivity is a disadvantage. Advantages include visual clarity, precise entries and exits, and easier risk visualization."},
+
+// ---------- CHAPTER 6: TREND ANALYSIS ----------
+{ch:6,t:"mc",q:"An uptrend is defined by:",o:["Lower highs and lower lows","Higher highs and higher lows","Peaks and troughs at the same relative level","Rising volume alone"],a:1,x:"Higher peaks and higher troughs. A downtrend has lower peaks and lower troughs."},
+{ch:6,t:"mc",q:"A trading range is also known as all of the following EXCEPT:",o:["Consolidation","Congestion area","Rectangle formation","Fan formation"],a:3,x:"Fan lines are decelerating trend lines, not a name for a trading range."},
+{ch:6,t:"mc",q:"Resistance is best defined as the point at which:",o:["Buyers overwhelm sellers","Sellers overwhelm buyers","Volume dries up","The moving average crosses price"],a:1,x:"Resistance: sellers overwhelm buyers. Support: buyers overwhelm sellers."},
+{ch:6,t:"mc",q:"When a support level is broken, it typically becomes:",o:["A stronger support level","Irrelevant to future price action","Resistance","A channel line"],a:2,x:"Polarity: broken support becomes resistance and broken resistance becomes support. These become psychological barriers."},
+{ch:6,t:"mc",q:"According to the lecture, probably the most profitable and reliable strategy when faced with a trading range is:",o:["Mean reversion range trading","Buying at resistance and selling at support","Trading the breakout","Waiting for a moving average crossover"],a:2,x:"The range is a battleground; trading the breakout is the most profitable and reliable approach. Range trading is risky and expensive."},
+{ch:6,t:"mc",q:"Which is NOT one of the three primary tools for determining trend reversals?",o:["Regression line","Trend line","Moving averages","Put/call ratio"],a:3,x:"The three tools: regression line, trend line, moving averages."},
+{ch:6,t:"mc",q:"Practitioners generally expect at most how many fan lines before a reversal in direction?",o:["One","Two","Three","Five"],a:2,x:"Three fan lines, often accompanied by a standard pattern."},
+{ch:6,t:"mc",q:"A retracement that occurs after an upward breakout is called a:",o:["Pullback","Throwback","Whipsaw","Fan line"],a:1,x:"Throwback after an upward breakout; pullback after a downward breakout."},
+{ch:6,t:"mc",q:"The steeper the angle of a trend:",o:["The more sustainable it becomes","The more powerful the buyer or seller group, but the less sustainable the move","The weaker the buyer or seller group","The less likely a trend line can be drawn"],a:1,x:"Steep angles show power but are less sustainable."},
+{ch:6,t:"mc",q:"Over long periods, investors tend to think in terms of:",o:["Points, so an arithmetic scale is best","Percentages, so a logarithmic scale is best","Volume, so an equivolume chart is best","Ticks, so a tick chart is best"],a:1,x:"Long periods: percentages (log scale). Short periods: points (arithmetic)."},
+{ch:6,t:"mc",q:"To draw a trend line you need at least:",o:["One significant peak","Two support points or two resistance points","Three fan lines","A regression formula"],a:1,x:"Trend lines are drawn by eye with a ruler through at least two support or two resistance points."},
+{ch:6,t:"mc",q:"A regression line is:",o:["A line connecting two troughs","A best-fit line derived from linear regression","A 45-degree line on a point-and-figure chart","A horizontal support line"],a:1,x:"Linear regression produces the best-fit line, sometimes with standard deviation bands added."},
+{ch:6,t:"mc",q:"Pring (2002) described the art of technical analysis as identifying trend changes early and holding a position until:",o:["The next earnings report","The weight of the evidence indicates the trend has reversed","The price doubles","A moving average is touched"],a:1,x:"Hold until the weight of the evidence says the trend has reversed."},
+{ch:6,t:"mc",q:"On an arithmetic chart, a trend line can be drawn with accuracy when prices are displayed within roughly a:",o:["1% to 5% range","20% to 40% range","100% to 200% range","Any range"],a:1,x:"Within 20% to 40% an arithmetic chart works; wider ranges need a logarithmic scale."},
+{ch:6,t:"mc",q:"A channel line is:",o:["A line drawn through the center of the price bars","A parallel line on the opposite side of the trend line","A horizontal line at a round number","The 200-day moving average"],a:1,x:"The channel line parallels the trend line and characterizes support and resistance in a directional trend."},
+{ch:6,t:"mc",q:"A support or resistance zone is usually stronger when:",o:["It contains more horizontal lines bunched together","Volume is lower","It is drawn on a log scale","Only one trough touches it"],a:0,x:"The more horizontal lines through significant troughs or peaks within the zone, the stronger it is."},
+{ch:6,t:"mc",q:"When prices reach round numbers, the tendency to buy and sell:",o:["Decreases","Increases","Is unchanged","Depends on the moving average"],a:1,x:"Round numbers act as psychological barriers and increase buying and selling."},
+{ch:6,t:"mc",q:"The first step in “Trend: the key to profits” is to:",o:["Buy at the lowest price","Determine, with minimum risk of error, when a trend has begun at its earliest time and price","Place a stop loss","Wait for confirmation from volume"],a:1,x:"Steps: determine when a trend has begun, enter a position appropriate to it, close when it ends."},
+{ch:6,t:"mc",q:"On a point-and-figure chart, bullish support and bearish resistance lines are drawn at:",o:["30 degrees","45 degrees","60 degrees","Horizontal"],a:1,x:"P&F trend lines are drawn at 45 degrees (Eli Lilly and Enphase examples)."},
+{ch:6,t:"mc",q:"A price that remains in one direction, called trending, tells us there is:",o:["An equilibrium of supply and demand","An imbalance of demand and supply","No emotion in the market","Low liquidity"],a:1,x:"Trending prices signal an imbalance of demand and supply; equilibrium is rarely reached."},
+{ch:6,t:"mc",q:"An accelerating trend line is most often seen during:",o:["A quiet consolidation","A speculative bubble or a panic","A trading range","A triangular moving average"],a:1,x:"During bubbles or panics prices curve away from a straight line, so the trend line must be adjusted continually."},
+{ch:6,t:"mc",q:"Which Dow Theory basis of trend analysis says trend behavior is the same regardless of the period?",o:["Trends define a direction","Trends are fractal","Trends tend to continue","Trends are influenced by larger and smaller trends"],a:1,x:"Fractal: the same behavior on any time frame."},
+{ch:6,t:"tf",q:"A trend is a line, so a well-behaved trend will move straight up or down.",a:false,x:"A trend is a direction rather than a line. It will never be straight up or down."},
+{ch:6,t:"tf",q:"A downtrend is characterized by lower highs and lower lows.",a:true,x:"Lower peaks and lower troughs."},
+{ch:6,t:"tf",q:"The longer a trend line and the more times price touches it, the more significant it is when the line is broken.",a:true,x:"Length and number of touches both raise the significance of a break."},
+{ch:6,t:"tf",q:"A retracement after a downward breakout is called a throwback.",a:false,x:"That is a pullback. A throwback follows an upward breakout."},
+{ch:6,t:"tf",q:"Any particular trend is influenced by its next larger and next smaller trend.",a:true,x:"One of the four Dow Theory bases of trend analysis."},
+{ch:6,t:"tf",q:"A support point is a single peak where prices reversed downward.",a:false,x:"A support point is a single trough. A peak that reverses downward is a resistance point."},
+{ch:6,t:"tf",q:"Trend lines are not subject to whipsaws.",a:false,x:"Trend lines are subject to whipsaws."},
+{ch:6,t:"tf",q:"In channel trading, positions should be taken only in the direction of the trend.",a:true,x:"A channel is a trading range defined by trend lines; trade only in the trend's direction."},
+{ch:6,t:"tf",q:"Horizontal support lines should be extended into the past to see if earlier declines stopped at the same level.",a:true,x:"Extend lines both forward and backward; where they bunch together is the zone."},
+
+// ---------- CHAPTER 7: INTRO TO CHARTS ----------
+{ch:7,t:"mc",q:"A standard line chart usually plots which price?",o:["The open","The high","The close","The average of high and low"],a:2,x:"Line charts plot closing prices and show two variables, price and time."},
+{ch:7,t:"mc",q:"On an OHLC bar, the small tick on the left side of the bar represents the:",o:["Close","Open","High","Low"],a:1,x:"Left tick = open, right tick = close, top = high, bottom = low."},
+{ch:7,t:"mc",q:"Which chart type always includes the opening price?",o:["Line chart","HLC bar chart","Candlestick chart","Point-and-figure chart"],a:2,x:"Candlesticks always contain the open; bar charts may or may not."},
+{ch:7,t:"mc",q:"On a candlestick chart, the real body is filled in (dark) when:",o:["The close is above the open","The close is below the open","The high equals the close","Volume is above average"],a:1,x:"Filled when close is below open; hollow when close is above open."},
+{ch:7,t:"mc",q:"A doji forms when:",o:["The high and low are equal","The open and close are virtually equal","The close equals the prior close","Volume is zero"],a:1,x:"Doji: open and close virtually equal, so the real body is a thin line."},
+{ch:7,t:"mc",q:"On a semi-logarithmic scale, equal vertical distance represents:",o:["The same dollar change","The same percentage change","The same volume","The same number of trades"],a:1,x:"Log scale: equal distance = equal percentage change. Arithmetic: equal distance = equal price interval."},
+{ch:7,t:"mc",q:"By the lecture's rule of thumb, a logarithmic scale is more useful than arithmetic when price movements exceed:",o:["5%","10%","20%","50%"],a:2,x:"Over 20%, or for charts spanning more than a few years."},
+{ch:7,t:"mc",q:"In an Equivolume chart, the width of each box represents:",o:["Time","The price range","Volume","The number of ticks"],a:2,x:"Width is volume; the box runs from the low to the high. Time is not evenly scaled."},
+{ch:7,t:"mc",q:"A chart in which a new bar forms only after 1,000,000 shares have traded is a:",o:["Tick bar chart","Range bar chart","Volume bar chart","Point-and-figure chart"],a:2,x:"Volume bars: fixed share count. Tick bars: fixed trade count. Range bars: fixed price move."},
+{ch:7,t:"mc",q:"Which was NOT listed as a folk-history reason for the importance of the closing price?",o:["Convenience","Consistency","Capital requirements","Correlation with volume"],a:3,x:"The four: convenience, consistency, capital requirements (margin), and sentiment (sleeping with positions)."},
+{ch:7,t:"mc",q:"The difference between the high and low price in any bar is called the:",o:["Spread","Range","Gap","Body"],a:1,x:"High minus low is the range."},
+{ch:7,t:"mc",q:"The three most common chart types that record prices at given time intervals are:",o:["Line, bar, candlestick","Equivolume, tick, range","Point-and-figure, Renko, Kagi","Area, pie, scatter"],a:0,x:"Line, bar, and candlestick charts. Point-and-figure records only price changes beyond a box size."},
+{ch:7,t:"mc",q:"A point-and-figure chart records:",o:["Every closing price","Only price changes that exceed a predefined box size","Volume per hour","The open and close only"],a:1,x:"It ignores time entirely and filters minor noise."},
+{ch:7,t:"mc",q:"A range bar chart forms a new bar only after:",o:["A fixed number of trades","A fixed amount of volume","Price moves a fixed range, such as $0.50","The market closes"],a:2,x:"Range bars highlight volatility expansion and contraction; the dates on the x-axis are not evenly spaced."},
+{ch:7,t:"mc",q:"A 5,000-tick chart creates a new bar after:",o:["5,000 shares","5,000 trades, regardless of size","5,000 minutes","A $5,000 move"],a:1,x:"Each tick is one transaction. Tick charts emphasize trading activity intensity."},
+{ch:7,t:"mc",q:"When a price advance halts with high volume, the lecture suggests this is potentially:",o:["A top","A bottom","A doji","A breakout"],a:0,x:"Advance halting on high volume: potentially a top. Decline halting on high volume: potentially a bottom."},
+{ch:7,t:"mc",q:"Among Schwager's benefits of charts, defining meaningful and realistic stop points makes charts a:",o:["Timing tool","Money management tool","Volatility tool","Sentiment tool"],a:1,x:"Charts as a money management tool help define stop points."},
+{ch:7,t:"mc",q:"Julie Dahlquist's quote says that at its root, technical analysis is the study of:",o:["Earnings","Price","Volume","Sentiment"],a:1,x:"Price captures all the information about supply and demand; charts gather and record it."},
+{ch:7,t:"mc",q:"The first and still most common chart style portrayed the high and low with a:",o:["Filled area from the baseline","Floating vertical line not connected to the baseline","Series of Xs and Os","Horizontal step line"],a:1,x:"Borrowed from the bar graph, with a floating vertical line. The second path was the price movement line."},
+{ch:7,t:"mc",q:"On a time-based chart, low-volume periods produce:",o:["Few or no bars","Many small, noisy bars","Wider bars","No change"],a:1,x:"Time-based: clock-driven, many small noisy bars in quiet periods. Volume-scaled: few or no bars."},
+{ch:7,t:"mc",q:"An Equivolume box is drawn black when:",o:["The close is above the prior close","The close is below the prior close","Volume is above average","The open equals the close"],a:0,x:"Black when the close is above the prior close, red when below."},
+{ch:7,t:"mc",q:"Volume is commonly portrayed on a price chart:",o:["As a line over the price","At the bottom, on its own scale, as vertical bars","On the left axis","Only on monthly charts"],a:1,x:"Volume sits at the bottom with its own scale, one vertical bar per interval."},
+{ch:7,t:"mc",q:"Which chart type is especially useful when studying long-term trends and key support and resistance levels with minimal clutter?",o:["Line chart","Tick chart","Range bar chart","Equivolume chart"],a:0,x:"Line charts visualize where price has traveled and are especially useful for long-term trends."},
+{ch:7,t:"tf",q:"Bar charts must include the opening price.",a:false,x:"Bar charts show at least high, low, and close; some also contain the open. Candlesticks always include it."},
+{ch:7,t:"tf",q:"In an Equivolume chart, the horizontal axis is scaled in trading days.",a:false,x:"The horizontal distance measures volume, not time."},
+{ch:7,t:"tf",q:"Charts are also a great communication tool.",a:true,x:"One of the stated advantages of chart construction."},
+{ch:7,t:"tf",q:"When prices are rising on decreasing volume, the move is considered questionable.",a:true,x:"Rising volume is impressive in either direction; decreasing volume is questionable in either direction."},
+{ch:7,t:"tf",q:"On a logarithmic scale, a move from $2 to $4 takes the same vertical distance as a move from $4 to $8.",a:true,x:"Both are 100% moves, so they are equal on a log scale."},
+{ch:7,t:"tf",q:"The basic tools and principles of technical analysis can be applied to any time frame.",a:true,x:"Trends are fractal; 39-minute, daily, weekly, and monthly charts use the same tools."},
+{ch:7,t:"tf",q:"A multi-y-axis chart lets two series with very different price levels be compared on one chart.",a:true,x:"The DJIA and S&P 500 example uses separate left and right axes."},
+{ch:7,t:"tf",q:"Media line charts that fill the area under the line are called area charts.",a:true,x:"Area charts are a line chart variant common on financial TV."},
+{ch:7,t:"num",q:"On January 28, 2022 Apple traded at a high of $170.35 and a low of $162.80. What was the bar's range? (two decimals)",a:7.55,tol:0.01,u:"$",x:"Range = high − low = 170.35 − 162.80 = <b>$7.55</b>."},
+
+// ---------- CHAPTER 8: MOVING AVERAGES ----------
+{ch:8,t:"mc",q:"A moving average is best described as:",o:["A leading indicator that predicts price direction","A lagging indicator that defines the current direction","A volume indicator","A measure of intrinsic value"],a:1,x:"MAs smooth price into a trend-following indicator. They lag because they are based on past prices."},
+{ch:8,t:"mc",q:"The weighting multiplier for a 10-period EMA is:",o:["9.52%","10.00%","18.18%","20.00%"],a:2,x:"2 / (10 + 1) = 0.1818. A 20-period EMA uses 2/21 = 9.52%; the weight halves each time the period doubles."},
+{ch:8,t:"mc",q:"The EMA was created primarily to avoid:",o:["Whipsaws in sideways markets","The drop-off effect when the oldest price leaves an SMA","The need for a starting value","Volume distortion"],a:1,x:"When an old price with a big change drops off, the SMA jumps. The EMA keeps all data and weights recent prices more."},
+{ch:8,t:"mc",q:"A 10-day linearly weighted moving average divides the weighted sum by:",o:["10","45","55","100"],a:2,x:"10 + 9 + 8 + ... + 1 = 55, the sum of the multipliers."},
+{ch:8,t:"mc",q:"A shorter-term moving average crossing below a longer-term moving average indicates:",o:["Potential bullishness","Potential bearishness","A trading range","Rising volatility"],a:1,x:"Crossing below: bearish. Crossing above: bullish. Rebounds off the longer MA work the same way."},
+{ch:8,t:"mc",q:"Positive directional movement (+DM) occurs when:",o:["Today's close is above yesterday's close","Today's high exceeds yesterday's high","Today's low is below yesterday's low","Today's candle is green"],a:1,x:"+DM: today's high above yesterday's high. −DM: today's low below yesterday's low. Candle colors are irrelevant."},
+{ch:8,t:"mc",q:"The ADX measures:",o:["Trend direction","Trend strength regardless of direction","Volatility","Volume"],a:1,x:"ADX = strength. +DI and −DI = direction."},
+{ch:8,t:"mc",q:"Which band adjusts for changing volatility using standard deviation around a 20-day SMA?",o:["Percentage envelope","Keltner Band","Donchian Channel","Bollinger Bands"],a:3,x:"Bollinger Bands: 20-day SMA, 2 standard deviations. They widen in volatile periods and shrink in stable ones."},
+{ch:8,t:"mc",q:"A Donchian Channel plots:",o:["A 20-day SMA plus and minus 2.5%","The highest high and lowest low over a lookback period","The typical price plus and minus the average range","The ratio of close to the 10-day SMA"],a:1,x:"Commonly 20 trading days (about four weeks). Buy on a break above the upper channel, sell below the lower."},
+{ch:8,t:"mc",q:"Which is NOT one of the seven main applications of moving averages listed in the lecture?",o:["Price filter","Price barrier (support and resistance)","Determining intrinsic value","Trigger for entries and exits"],a:2,x:"The seven: price filter, oscillator form, price barrier, central value for bands, trend strength and direction, trigger, bullish/bearish signal."},
+{ch:8,t:"mc",q:"According to the lecture, what percentage of big winning stocks made the largest portion of their gain in a Stage 2 uptrend?",o:["50%","75%","98%","100%"],a:2,x:"98%. Trading with the trend is evidence institutions are buying and raises the probability of success."},
+{ch:8,t:"mc",q:"Using moving average crossover strategies in a sideways market tends to generate:",o:["Fewer signals","Lots of whipsaws","Perfect entries","Higher volume"],a:1,x:"Crossovers are a signal in a trending market; in a range they whipsaw (Home Depot had three before a good trade)."},
+{ch:8,t:"mc",q:"In the NYSE Composite example, the 200-day SMA acted as:",o:["Support in the uptrend and resistance in the downtrend","Resistance in the uptrend only","A volume indicator","A Bollinger Band"],a:0,x:"The MA often acts as support in uptrends and resistance in downtrends."},
+{ch:8,t:"mc",q:"The geometric moving average (GMA) is a simple moving average of:",o:["Closing prices","Percent changes between bars","Volume","Highs and lows"],a:1,x:"GMA averages percent changes, is mostly used for indexes, and suits data with extreme price variation."},
+{ch:8,t:"mc",q:"A triangular moving average is:",o:["An SMA of an SMA, with half the period length","A weighted average that triples the newest price","A 3-period SMA","A moving average of volume"],a:0,x:"For example the 10-day MA of a 20-day MA, for extra smoothing."},
+{ch:8,t:"mc",q:"In the XLK example comparing a 50-day SMA and 50-day EMA:",o:["The SMA turned up first","The EMA turned up well ahead of the SMA","They were identical","The EMA never turned"],a:1,x:"The EMA weights recent prices more heavily, so it moved lower sharply and turned up first."},
+{ch:8,t:"mc",q:"The best confirmation for a +DI crossing above −DI is:",o:["ADX falling below 20","ADX above 20 to 25 and rising","Volume declining","A doji"],a:1,x:"Trade DI crossovers when ADX is above 20 to 25 and rising. Avoid them when ADX is low or falling."},
+{ch:8,t:"mc",q:"When the ADX peaks above both DMIs, it often signals:",o:["The start of a new trend","A peak in the trend","A volume spike","A doji"],a:1,x:"ADX peaks and troughs coincide with reversals; a peak above both DMIs often marks the end of a trend."},
+{ch:8,t:"mc",q:"On an inside day (today's range entirely within yesterday's range), directional movement is:",o:["+DM","−DM","Zero","Both +DM and −DM"],a:2,x:"Inside days are ignored and given a zero."},
+{ch:8,t:"mc",q:"On an outside day, which directional movement is recorded?",o:["+DM always","−DM always","Whichever difference (highs or lows) is larger","Zero"],a:2,x:"The greater difference wins. A single day can never have both +DM and −DM."},
+{ch:8,t:"mc",q:"A drawback of percentage envelopes is that they:",o:["Use standard deviation","Do not account for changing volatility and stay the same size","Require tick data","Cannot be drawn on daily charts"],a:1,x:"Envelopes are a fixed percentage around the MA. Bollinger Bands fix this by using standard deviation."},
+{ch:8,t:"mc",q:"The “typical price” used to construct Keltner Bands is:",o:["(open + close) / 2","(close + high + low) / 3","(high + low) / 2","The closing price"],a:1,x:"Typical price = (close + high + low) / 3; the bands are a 10-day SMA of it plus or minus the 10-day SMA of the bar range."},
+{ch:8,t:"mc",q:"A Donchian Channel implemented as a stop-and-reverse (SAR) system means:",o:["Positions are never closed","An opposite-channel breakout closes the existing position and opens one in the new direction","Only long positions are taken","Stops are placed at the moving average"],a:1,x:"A trend-following breakout system that flips direction on an opposite-channel breakout."},
+{ch:8,t:"mc",q:"In the Medivation example, what replaced the original stop loss once it caught up to the breakeven point?",o:["The 200-day EMA","The 50-day SMA acting as a trailing stop","A Bollinger Band","A Donchian lower channel"],a:1,x:"The 50-day line caught up to breakeven and acted as a trailing stop, locking in a 100% gain."},
+{ch:8,t:"mc",q:"Each time the moving average period doubles, the EMA weighting on the most recent price:",o:["Doubles","Drops by half","Stays the same","Goes to zero"],a:1,x:"10-period: 18.18%. 20-period: 9.52%. The weighting roughly halves."},
+{ch:8,t:"mc",q:"The ratio of the close to a 10-day SMA (Walmart example) is used to:",o:["Spot price extremes that may revert to the mean","Measure volume","Calculate the ADX","Draw Keltner Bands"],a:0,x:"Prices tend to return to their average. Readings near 1.045 and 0.975 marked extremes."},
+{ch:8,t:"mc",q:"An ADX reading below 20 generally indicates:",o:["A strong trend","A weak trend or sideways market","An extended trend","A bullish crossover"],a:1,x:"Below 20: weak or sideways. 20 to 25 rising: trend developing. Above 40: strong. 50+: exceptionally strong, possibly extended."},
+{ch:8,t:"mc",q:"+DI and −DI are calculated as the 14-day smoothed +DM and −DM divided by the:",o:["Closing price","14-day Average True Range (ATR)","20-day SMA","Daily volume"],a:1,x:"The ratio gives the percentage of the true range that was above or below equilibrium over those 14 days."},
+{ch:8,t:"tf",q:"A moving average predicts the future direction of price.",a:false,x:"It defines the current direction with a lag; it does not predict."},
+{ch:8,t:"tf",q:"An exponential moving average keeps all past data in the calculation rather than dropping the earliest price.",a:true,x:"All data is considered, which is how the EMA avoids the drop-off effect."},
+{ch:8,t:"tf",q:"A single day can register both +DM and −DM.",a:false,x:"Never both. On outside days the larger difference wins."},
+{ch:8,t:"tf",q:"Bollinger Bands get wider during periods of large volatility.",a:true,x:"They widen with volatility and shrink during stable prices."},
+{ch:8,t:"tf",q:"In a longer moving average, each individual data point carries less weight.",a:true,x:"More data, less weight per point, an important consideration with outlier days."},
+{ch:8,t:"tf",q:"DI crossovers are most reliable when ADX is low or falling.",a:false,x:"Whipsaws are common in non-trending markets. Trade crossovers when ADX is rising."},
+{ch:8,t:"tf",q:"A rising moving average is an indication of potential bullishness.",a:true,x:"Rising MA: bullish. Declining MA: bearish."},
+{ch:8,t:"tf",q:"Support and resistance zones can form where two moving averages cross.",a:true,x:"Where MAs cross is often a support and resistance area (Walt Disney example)."},
+{ch:8,t:"tf",q:"Your goal when trading with the trend is to buy at the lowest price.",a:false,x:"The goal is to buy at the right price, not the lowest price."},
+{ch:8,t:"num",q:"Daily closes are 20, 22, 24, 26, 28, 30. What is the first value of a 5-day SMA?",a:24,tol:0.01,u:"",x:"(20 + 22 + 24 + 26 + 28) / 5 = <b>24</b>."},
+{ch:8,t:"num",q:"Daily closes are 11, 12, 13, 14, 15, 16, 17. What is the third value of a 5-day SMA?",a:15,tol:0.01,u:"",x:"(13 + 14 + 15 + 16 + 17) / 5 = <b>15</b>, the lecture example."},
+{ch:8,t:"num",q:"What is the weighting multiplier for a 20-period EMA? (in %, two decimals)",a:9.52,tol:0.01,u:"%",x:"2 / (20 + 1) = 0.0952 = <b>9.52%</b>."},
+{ch:8,t:"num",q:"What is the weighting multiplier for a 5-period EMA? (in %, two decimals)",a:33.33,tol:0.01,u:"%",x:"2 / (5 + 1) = 0.3333 = <b>33.33%</b>."},
+{ch:8,t:"num",q:"Yesterday's 10-day EMA was 22.22 and today's close is 22.15. Using the 0.1818 multiplier, what is today's EMA? (two decimals)",a:22.21,tol:0.01,u:"",x:"(22.15 − 22.22) × 0.1818 + 22.22 = −0.0127 + 22.22 = <b>22.21</b>, matching the lecture table."},
+{ch:8,t:"num",q:"Yesterday's EMA was 22.52 and today's close is 24.05. With a 0.1818 multiplier, what is today's EMA? (two decimals)",a:22.80,tol:0.01,u:"",x:"(24.05 − 22.52) × 0.1818 + 22.52 = 0.278 + 22.52 = <b>22.80</b>."},
+{ch:8,t:"num",q:"Five closes, newest first: 14, 13, 12, 11, 10. What is the 5-day linearly weighted moving average? (two decimals)",a:12.67,tol:0.01,u:"",x:"(14×5 + 13×4 + 12×3 + 11×2 + 10×1) / 15 = (70 + 52 + 36 + 22 + 10) / 15 = 190 / 15 = <b>12.67</b>."},
+{ch:8,t:"num",q:"Using the lecture's LWMA example, closes newest first are 90.90, 90.36, 90.28, 90.83, 90.91. What is the 5-day LWMA? (two decimals)",a:90.62,tol:0.01,u:"$",x:"(90.90×5 + 90.36×4 + 90.28×3 + 90.83×2 + 90.91×1) / 15 = 1359.27 / 15 = <b>$90.62</b>."},
+{ch:8,t:"num",q:"A bar has close 100, high 104, low 98. What is the Keltner “typical price”? (two decimals)",a:100.67,tol:0.01,u:"$",x:"(100 + 104 + 98) / 3 = 302 / 3 = <b>$100.67</b>."},
+{ch:8,t:"num",q:"Today's high is 55.69 and yesterday's high was 54.62. Today's low is 54.95 and yesterday's low was 54.21. What is +DM? (two decimals)",a:1.07,tol:0.01,u:"",x:"High exceeded the prior high by 55.69 − 54.62 = <b>1.07</b>. The low did not break the prior low, so −DM = 0."},
+{ch:8,t:"num",q:"Today's high is 57.22 (prior 57.35) and today's low is 55.47 (prior 56.92). What is −DM? (two decimals)",a:1.45,tol:0.01,u:"",x:"The high did not exceed the prior high. The low broke the prior low by 56.92 − 55.47 = <b>1.45</b>, so −DM = 1.45 and +DM = 0."},
+{ch:8,t:"num",q:"Apple's 50-day SMA is $172.48. What is the upper line of a 2.5% percentage envelope? (two decimals)",a:176.79,tol:0.02,u:"$",x:"172.48 × 1.025 = <b>$176.79</b> (the chart shows 176.80 from rounding). The lower line is 172.48 × 0.975 = $168.17."},
+{ch:8,t:"num",q:"Apple's 50-day SMA is $172.48 and the 50-day standard deviation of price is $5.355. What is the upper Bollinger Band at 2 standard deviations? (two decimals)",a:183.19,tol:0.02,u:"$",x:"172.48 + 2 × 5.355 = <b>$183.19</b>, matching the chart. The lower band is 172.48 − 10.71 = $161.77."},
+];
+
+const S = {mode:"practice", ch:"all", type:"all", order:Q.map((_,i)=>i), ans:{}, checked:{}, submitted:false, sim:null, deadline:0, tick:null};
+const $ = s=>document.querySelector(s);
+function shuffle(a){for(let i=a.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[a[i],a[j]]=[a[j],a[i]]}return a}
+const CH = [1,2,3,4,5,6,7,8];
+const CH_NAMES = {1:"Course Overview",2:"Being Right or Making Money",3:"Behavioral Finance",4:"Dow Theory",5:"History & Foundation",6:"Trend Analysis",7:"Intro to Charts",8:"Moving Averages"};
+
+function chipRow(el,key,items){
+  items.forEach(([v,l])=>{const b=document.createElement("button");b.className="chip";b.textContent=l;b.id=`f-${key}-${v}`;b.setAttribute("aria-pressed",S[key]===v);b.onclick=()=>{S[key]=v;el.querySelectorAll(".chip").forEach(c=>c.setAttribute("aria-pressed",c===b));render()};el.appendChild(b)});
+}
+chipRow($("#chapRow"),"ch",[["all","All"],["1","Ch 1"],["2","Ch 2"],["3","Ch 3"],["4","Ch 4"],["5","Ch 5"],["6","Ch 6"],["7","Ch 7"],["8","Ch 8"]]);
+chipRow($("#typeRow"),"type",[["all","All"],["mc","Multiple choice"],["tf","True / false"],["num","Calculations"]]);
+
+document.querySelectorAll("[data-mode]").forEach(b=>b.onclick=()=>{endSim();S.mode=b.dataset.mode;S.submitted=false;S.checked={};document.querySelectorAll("[data-mode]").forEach(c=>c.setAttribute("aria-pressed",c===b));render()});
+$("#shuffle").onclick=()=>{for(let i=S.order.length-1;i>0;i--){const j=Math.floor(Math.random()*(i+1));[S.order[i],S.order[j]]=[S.order[j],S.order[i]]}render()};
+$("#reset").onclick=()=>{endSim();S.ans={};S.checked={};S.submitted=false;render()};
+$("#submit").onclick=()=>{stopTimer();S.submitted=true;visible().forEach(i=>{if(S.ans[i]!==undefined&&S.ans[i]!=="")S.checked[i]=true});render();$("#results").scrollIntoView({behavior:"smooth",block:"start"})};
+
+function visible(){if(S.sim)return S.sim.slice();return S.order.filter(i=>{const q=Q[i];return (S.ch==="all"||String(q.ch)===S.ch)&&(S.type==="all"||q.t===S.type)})}
+function parseNum(s){if(s==null)return NaN;s=String(s).replace(/[$,%\s]/g,"").replace(/[−–]/g,"-");if(/^\(.*\)$/.test(s))s="-"+s.slice(1,-1);return s===""?NaN:Number(s)}
+function isRight(i){const q=Q[i],a=S.ans[i];if(a===undefined||a==="")return false;
+  if(q.t==="num"){const v=parseNum(a);return !isNaN(v)&&Math.abs(v-q.a)<=Math.max(q.tol||0,Math.abs(q.a)*0.001)}
+  if(q.t==="tf")return a===String(q.a);return Number(a)===q.a}
+function fmtAns(q){if(q.t==="tf")return q.a?"True":"False";if(q.t==="mc")return q.o[q.a];
+  const v=q.a.toLocaleString("en-US",{maximumFractionDigits:4});return q.u==="$"?"$"+v:v+(q.u&&q.u!=="$"?" "+q.u:"")}
+function esc(s){return String(s).replace(/&/g,"&amp;").replace(/"/g,"&quot;")}
+
+// Exam Sim: 50 questions weighted to the professor's Midterm 1 outline (no R-type calculations, history not tested)
+const SIM_PLAN={1:5,2:2,3:3,4:8,6:12,7:9,8:11};
+function simEligible(q){if(q.t==="num"&&q.ch===2)return false;if(q.lg)return false;return true}
+function startSim(){const pick=[];CH.forEach(c=>{const n=SIM_PLAN[c]||0;if(!n)return;const pool=shuffle(Q.map((q,i)=>[q,i]).filter(([q])=>q.ch===c&&simEligible(q)).map(([,i])=>i));pick.push(...pool.slice(0,n))});
+  S.sim=shuffle(pick);S.mode="exam";S.ans={};S.checked={};S.submitted=false;S.ch="all";S.type="all";
+  document.querySelectorAll("[data-mode]").forEach(c=>c.setAttribute("aria-pressed",c.dataset.mode==="exam"));
+  ["#chapRow","#typeRow"].forEach(r=>document.querySelectorAll(r+" .chip").forEach((c,k)=>c.setAttribute("aria-pressed",k===0)));
+  S.deadline=Date.now()+75*60*1000;$("#timer").hidden=false;$("#sim").textContent="Exit Exam Sim";tickTimer();S.tick=setInterval(tickTimer,1000);render();window.scrollTo({top:$("#qs").offsetTop-120,behavior:"smooth"})}
+function tickTimer(){const left=Math.max(0,S.deadline-Date.now());const m=Math.floor(left/60000),sec=Math.floor(left%60000/1000);const t=$("#timer");t.textContent=String(m).padStart(2,"0")+":"+String(sec).padStart(2,"0");t.classList.toggle("low",left<5*60*1000);
+  if(left<=0&&!S.submitted){stopTimer();$("#submit").click()}}
+function stopTimer(){if(S.tick){clearInterval(S.tick);S.tick=null}}
+function endSim(){if(!S.sim)return;stopTimer();S.sim=null;$("#timer").hidden=true;$("#sim").textContent="Exam Sim (50 Q · 75 min)"}
+$("#sim").onclick=()=>{if(S.sim){endSim();S.ans={};S.checked={};S.submitted=false;render()}else startSim()};
+
+function render(){
+  const list=$("#qs");list.innerHTML="";const vis=visible();
+  $("#empty").hidden=vis.length>0;$("#submit").hidden=S.mode!=="exam";$("#submit").disabled=S.submitted;
+  vis.forEach((i,n)=>{
+    const q=Q[i],li=document.createElement("li");const shown=!!S.checked[i];
+    li.className="q"+(shown?(isRight(i)?" right":" wrong"):"");li.id="q"+i;
+    const typeLbl={mc:"Multiple choice",tf:"True / false",num:"Calculation"}[q.t];
+    let h=`<div class="qn">${String(n+1).padStart(2,"0")}</div><div class="qbody"><div class="meta"><span class="tag">Ch ${q.ch} · ${CH_NAMES[q.ch]}</span><span class="tag">${typeLbl}</span></div><p class="prompt">${q.q}</p>`;
+    if(q.t==="num"){h+=`<div class="numrow"><input id="in${i}" inputmode="decimal" autocomplete="off" aria-label="Your answer" value="${esc(S.ans[i]??"")}" ${shown&&S.mode==="exam"?"disabled":""}><span class="unit">${q.u||""}</span></div>`}
+    else{const opts=q.t==="tf"?[["true","True"],["false","False"]]:q.o.map((o,k)=>[String(k),o]);
+      h+=`<div class="opts" role="radiogroup">`+opts.map(([v,l])=>{let cls="opt";if(shown){const correct=q.t==="tf"?v===String(q.a):Number(v)===q.a;if(correct)cls+=" is-right";else if(S.ans[i]===v)cls+=" is-wrong"}
+        return `<label class="${cls}"><input type="radio" name="r${i}" id="r${i}-${v}" value="${v}" ${S.ans[i]===v?"checked":""} ${shown&&S.mode==="exam"?"disabled":""}><span>${l}</span></label>`}).join("")+`</div>`}
+    h+=`<div class="actions">`;
+    if(S.mode==="practice")h+=`<button class="btn ghost" data-check="${i}">${shown?"Check again":"Check answer"}</button>`;
+    if(shown)h+=`<span class="verdict ${isRight(i)?"good":"bad"}">${isRight(i)?"Correct":"Not quite · answer: "+fmtAns(q)}</span>`;
+    else if(S.mode==="exam"&&S.submitted)h+=`<span class="verdict bad">Unanswered · answer: ${fmtAns(q)}</span>`;
+    h+=`</div>`;
+    if(shown||(S.mode==="exam"&&S.submitted))h+=`<div class="explain ${shown&&isRight(i)?"good":"bad"}">${q.x}</div>`;
+    h+=`</div>`;li.innerHTML=h;list.appendChild(li);
+  });
+  list.querySelectorAll("input[type=radio]").forEach(r=>r.onchange=()=>{const i=+r.name.slice(1);S.ans[i]=r.value;if(S.mode==="practice"){delete S.checked[i];rerenderOne(i)}tally()});
+  list.querySelectorAll("input[inputmode]").forEach(inp=>{inp.oninput=()=>{S.ans[+inp.id.slice(2)]=inp.value;tally()};inp.onkeydown=e=>{if(e.key==="Enter"&&S.mode==="practice"){const i=+inp.id.slice(2);S.checked[i]=true;rerenderOne(i);tally()}}});
+  list.querySelectorAll("[data-check]").forEach(b=>b.onclick=()=>{const i=+b.dataset.check;if(S.ans[i]===undefined||S.ans[i]===""){b.nextElementSibling?.remove();b.insertAdjacentHTML("afterend",'<span class="verdict bad">Pick or enter an answer first.</span>');return}S.checked[i]=true;rerenderOne(i);tally()});
+  tally();results();
+}
+function rerenderOne(i){const y=window.scrollY;render();window.scrollTo(0,y)}
+function tally(){const vis=visible();const ans=vis.filter(i=>S.ans[i]!==undefined&&S.ans[i]!=="").length;const graded=vis.filter(i=>S.checked[i]);const right=graded.filter(isRight).length;
+  $("#t-total").textContent=vis.length;$("#t-ans").textContent=ans;$("#t-right").textContent=(S.mode==="exam"&&!S.submitted)?"–":right;
+  const denom=S.mode==="exam"?(S.submitted?vis.length:0):graded.length;$("#t-pct").textContent=denom?Math.round(100*right/denom)+"%":"–";
+  $("#t-bar").style.width=vis.length?(100*ans/vis.length)+"%":"0"}
+function results(){const box=$("#results");if(!(S.mode==="exam"&&S.submitted)){box.hidden=true;return}
+  const vis=visible();let rows="";let tr=0;
+  CH.forEach(c=>{const qs=vis.filter(i=>Q[i].ch===c);if(!qs.length)return;const r=qs.filter(isRight).length;tr+=r;rows+=`<tr><td>Ch ${c} · ${CH_NAMES[c]}</td><td class="pct">${r} / ${qs.length}</td><td class="pct">${Math.round(100*r/qs.length)}%</td></tr>`});
+  const weak=CH.map(c=>{const qs=vis.filter(i=>Q[i].ch===c);return qs.length?[c,qs.filter(isRight).length/qs.length]:null}).filter(Boolean).sort((a,b)=>a[1]-b[1])[0];
+  box.innerHTML=`<h2>${tr} of ${vis.length} correct · ${Math.round(100*tr/vis.length)}%</h2>${S.sim?`<p class="hint">Exam Sim: 50 questions weighted to the professor's Midterm 1 outline. Chapter 5 history is not tested and R calculations are excluded.</p>`:""}<div class="tbl"><table><thead><tr><th>Chapter</th><th>Correct</th><th>Score</th></tr></thead><tbody>${rows}</tbody></table></div>${weak&&weak[1]<1?`<p class="lede" style="margin-top:10px">Weakest area: Chapter ${weak[0]} (${CH_NAMES[weak[0]]}). Filter to it and switch to Practice mode to see explanations as you go.</p>`:""}<div class="actions"><button class="btn ghost" id="retake">Clear and retake</button></div>`;
+  box.hidden=false;$("#retake").onclick=()=>{S.ans={};S.checked={};S.submitted=false;render();window.scrollTo(0,0)}}
+render();
+
+// ===================== LEARN MODE =====================
+// t = term (the answer), d = definition shown as the prompt, a = accepted aliases for typed answers
+const CARDS = {
+1:[
+{t:"Chartered Market Technician",d:"Designation from the CMT Association focused on technical analysis; the counterpart to the CFA's fundamental focus",a:["cmt","chartered market technician cmt"]},
+{t:"Chartered Financial Analyst",d:"Designation from the CFA Institute focused on fundamental analysis, tied to FINC 351 Investment Analysis",a:["cfa","chartered financial analyst cfa"]},
+{t:"CMT Level I",d:"Foundational principles exam: 132 multiple choice questions in 2 hours, 40 to 100 study hours",a:["level 1","level i","cmt level 1"]},
+{t:"CMT Level III",d:"The Work of a Technical Analyst: multiple choice plus short answers, 4 hours, 120 to 160 study hours",a:["level 3","level iii","cmt level 3"]},
+{t:"Phil Roth",d:"Said the fundamental analyst's biggest mistake is thinking a stock and a company are the same, and the technician's is thinking they are different",a:["roth"]},
+{t:"The Stock",d:"Side of the Company vs. Stock diagram holding price, volume, supply and demand, open interest, and psychology",a:["stock","stock side"]},
+{t:"The Company",d:"Side of the Company vs. Stock diagram holding competition, P/E ratio, management, products, and dividends",a:["company","company side"]},
+{t:"Graham and Dodd",d:"Authors of Security Analysis, the bible of fundamental analysis, which says no stock decision can be made except in light of a specific price",a:["graham dodd","benjamin graham","security analysis"]},
+{t:"The Gap",d:"The space between intrinsic value (accounting and valuation estimates) and market price (sentiment and supply and demand) that technical analysis helps navigate",a:["gap","price vs value gap","price value gap"]},
+{t:"Sentiment",d:"The missing piece in P = (F × V)^S: the exponent S, above 1 in bull markets and between 0 and 1 in bear markets",a:["s","sentiment exponent"]},
+{t:"Visual investor",d:"The instructor's goal for every student: someone who reads charts as the path of least resistance and a risk management tool",a:["visual investors"]},
+{t:"Peter Brandt",d:"Trader quoted that charts show the path of least resistance and provide an excellent risk management tool",a:["brandt"]},
+{t:"Howard Marks",d:"Investor associated with second-level thinking: think differently from others and better, and question the implications of an event",a:["marks"]},
+{t:"David Keller",d:"CMT who said an imperfect system followed with discipline is better than a perfect system followed erratically",a:["keller"]},
+{t:"3Ps",d:"Framework for market analysis: Philosophy, Process, and Psychology",a:["three ps","3 ps","philosophy process psychology"]},
+{t:"Weight of the evidence",d:"Evidence-based, cross-disciplinary process in the 3Ps that combines quant, technical, and fundamental inputs",a:["weight of evidence","evidence based"]},
+{t:"Environmental models",d:"Confirmation inputs in the 3Ps process: valuation, liquidity, monetary, fiscal, and other external threats",a:["environmental model","confirmation models"]},
+{t:"Stoicism",d:"Psychology principle in the 3Ps: you cannot control the world around you, only how you respond to it",a:["stoic"]},
+{t:"SPIVA",d:"S&P Dow Jones Indices scorecard showing 93.40% of U.S. large-cap funds underperformed the S&P 500 over 15 years through 2022",a:["spiva scorecard","active vs passive"]},
+{t:"Market breadth",d:"Measures such as NYSE new highs minus new lows and the Advance-Decline line that deteriorated in late 2021 before the 2022 bear market",a:["breadth"]},
+{t:"Sarbanes-Oxley Act",d:"2002 law passed in response to Enron requiring accurate disclosures, independent audits, internal controls, and executive criminal penalties and clawbacks",a:["sarbanes oxley","sox","sarbanes-oxley"]},
+{t:"Enron",d:"Houston energy company, Fortune's number one best company to work for in 2001, that peaked at $90.56 in 2000 and filed Chapter 11 on December 2, 2001 at $0.26"},
+{t:"WorldCom",d:"Telecom (later MCI) whose executives inflated assets by about $12 billion before its July 2002 bankruptcy",a:["mci","worldcom mci"]},
+{t:"Big base",d:"The wide consolidation Lehman Brothers failed to break out of in February 2008 after its double top buy signal at 66",a:["base"]},
+{t:"Bearish resistance line",d:"Point-and-figure downtrend line Lehman failed to penetrate in May 2008 and that Enron's sector broke in 2001",a:["bearish resistance","brl"]},
+{t:"Technicals lead fundamentals",d:"Lesson of the Starbucks example: S&P kept a 4 or 5 STARS rating while price fell, then cut to 2 stars as the technical attributes rose in May 2009",a:["technicals lead the fundamentals","technicals lead"]},
+{t:"Two ships passing in the night",d:"Phrase for Starbucks in May 2009, when the technical attribute rose to 3 as the fundamental STARS rating was lowered to 2",a:["ships passing in the night","two ships passing"]}
+],
+2:[
+{t:"Ned Davis",d:"Founder of Ned Davis Research and author of Being Right or Making Money, who admits failure to cut losses was his biggest mistake",a:["davis"]},
+{t:"Timing model",d:"The tool that improved Ned Davis's results and his sanity, allowing money to be made on a more consistent basis",a:["timing models"]},
+{t:"Objective indicators",d:"First of the four keys: mathematical tools with long historical analysis, used instead of gut emotions",a:["objective indicator"]},
+{t:"Discipline",d:"Second of the four keys: remaining faithful to your system through good and bad times; its opposite is chaos"},
+{t:"Flexibility",d:"Third of the four keys, seemingly at odds with discipline: change course when the evidence shifts",a:["flexible"]},
+{t:"Risk management",d:"Fourth of the four keys: controlling losses in the business of making mistakes; successful investors are risk managers",a:["risk manager","risk managers"]},
+{t:"Stan Druckenmiller",d:"Trader who went 130% long the day before the October 19, 1987 crash, liquidated in the first hour, went short, and finished the month with a net gain",a:["druckenmiller"]},
+{t:"Paul Tudor Jones",d:"Trader with no losing year since 1984 who was wrong on the U.S. and Japan in 1989 and still finished up 42%",a:["tudor jones","ptj","paul jones"]},
+{t:"Leo Melamed",d:"Said he could be wrong 60 percent of the time and come out a big winner because the key is money management",a:["melamed"]},
+{t:"Bob Farrell",d:"Said that when all the experts and forecasts agree, something else is going to happen",a:["farrell"]},
+{t:"The Chartist",d:"Newsletter whose September 12, 2013 issue listed four negative behaviors: failing to take losses, fear at bottoms and optimism at tops, not taking responsibility, no disciplined strategy",a:["chartist","chartist newsletter"]},
+{t:"Contrary opinion",d:"Ned Davis's favorite theory: crowd psychology and liquidity (potential demand) are inversely related",a:["contrarian","contrary opinion theory"]},
+{t:"Don't fight the tape",d:"NDR rule 1: models at least 50% trend sensitive; the tape is a stop-loss for should-be beliefs; the trend is your friend",a:["dont fight the tape","rule 1","never fight the tape"]},
+{t:"Don't fight the Fed",d:"NDR rule 2: stay in harmony with interest-rate and monetary trends; rates dropping is good, rising is bad; money moves markets",a:["dont fight the fed","rule 2","never fight the fed"]},
+{t:"Beware of the crowd at extremes",d:"NDR rule 3: go with the flow until it reaches a psychological extreme; the top is maximum optimism, the bottom maximum pessimism",a:["crowd extremes","beware the crowd","rule 3","beware of crowd extremes"]},
+{t:"Shock absorber",d:"Davis's metaphor for liquidity: extreme optimism equals low cash, extreme fear equals high cash",a:["shock absorber on a car"]},
+{t:"Money management rules",d:"NDR rule 8: more interested in making money than being right; let profits run and cut losses short; buy on the rumor, sell on the news",a:["money management","rule 8"]},
+{t:"R",d:"The initial risk on a trade: (entry price minus stop price) times position size; long at $100 with a stop at $95 means $5 per share",a:["1r","initial risk","one r"]},
+{t:"R-multiple",d:"Trade profit or loss divided by initial risk; a full stop-out is -1R and a gain of twice the risk is +2R",a:["r multiple","rmultiple"]},
+{t:"Position size",d:"Dollar risk per trade divided by risk per share; $250 of risk at $2.50 per share is 100 shares",a:["position sizing","sizing"]},
+{t:"Expectancy",d:"(Win rate × average win in R) minus (loss rate × average loss in R); the system's average R per trade",a:["expected value","ev","expectancy in r"]},
+{t:"Breakeven curve",d:"Line on the profit ratio vs. percent winners chart where systems neither gain nor lose; profitable systems sit above it",a:["breakeven edge","breakeven line"]},
+{t:"Maximum drawdown",d:"Maximum loss from an equity peak",a:["mdd","max drawdown","max dd"]},
+{t:"MAR ratio",d:"Net profit percent divided by max drawdown percent, also called the Recovery Ratio; should be above 1.0",a:["mar","recovery ratio"]},
+{t:"Sharpe ratio",d:"Excess return (portfolio return minus the T-bill rate) divided by the standard deviation of the excess return",a:["sharpe"]},
+{t:"Profit factor",d:"Total profit divided by total loss; must exceed 1.0, preferably over 2.0",a:["pf"]},
+{t:"Payoff ratio",d:"Average winning trade divided by average losing trade; should exceed 2.0 for trend-following systems",a:["payoff"]},
+{t:"Efficiency factor",d:"Net profit divided by gross profit, combining win/loss ratio and win probability"},
+{t:"Maximum favorable and adverse excursion",d:"Measure of dispersion in trades whose primary use is to hint where trailing stops should be",a:["mfe mae","mfe","mae","favorable and adverse excursion","excursion"]},
+{t:"Monte Carlo simulator",d:"Tool that generates thousands of randomized equity curves from win rate, reward-to-risk, and position sizing to show the distribution of outcomes",a:["monte carlo","monte carlo simulation"]},
+{t:"Probability of profit",d:"Percent of simulated sequences ending in profit; professionals target above 65%, world-class 80%+",a:["pop"]},
+{t:"Risk of ruin",d:"Probability the account ever drops below the chosen ruin threshold (30%, 50%, or 70%) at any point, even if it later recovers",a:["ror","ruin"]},
+{t:"95th percentile max drawdown",d:"The stress-test metric: only 5% of simulated outcomes produce a deeper drawdown",a:["95th percentile","95th percentile max dd","stress test"]}
+],
+3:[
+{t:"Traditional finance",d:"Models people as rational: risk-averse, utility-maximizing, Markowitz, CAPM, Modigliani-Miller, option pricing theory",a:["theoretical finance","standard finance"]},
+{t:"Behavioral finance",d:"Models people as normal, based on observed behavior; challenges the rational investor assumption and the efficient market hypothesis"},
+{t:"Homo economicus",d:"The rational, self-interested, probability-weighted decision maker that economic research often starts with",a:["economic man","rational agent"]},
+{t:"Daniel Kahneman",d:"2002 Nobel laureate who integrated psychology into economics and showed judgment uses heuristics that depart from probability theory",a:["kahneman"]},
+{t:"Prospect theory",d:"Tversky and Kahneman (1979): a loss is perceived as more significant than an equivalent gain, judged from a reference point"},
+{t:"Cognitive errors",d:"Faulty ways of thinking while processing information; can be eliminated through better information, advice, and education",a:["cognitive error","cognitive bias","cognitive biases"]},
+{t:"Emotional biases",d:"Judgment influenced by feelings rather than facts; harder to correct because they arise from an emotional framework",a:["emotional bias"]},
+{t:"Belief perseverance",d:"Cognitive subcategory: holding on to original beliefs and reacting selectively to new information",a:["belief perseverance bias","belief perseverance biases"]},
+{t:"Processing errors",d:"Cognitive subcategory: information processed incorrectly, memory errors, faulty reasoning",a:["processing error","information processing errors"]},
+{t:"Cognitive dissonance",d:"The mental discomfort that arises when new information conflicts with previously held beliefs"},
+{t:"Conservatism bias",d:"Maintaining prior views by inadequately incorporating new, conflicting information; sticking with a bullish call after a head and shoulders neckline breaks",a:["conservatism"]},
+{t:"Confirmation bias",d:"Noticing what confirms prior beliefs and ignoring what contradicts them; reading only the analyst upgrade, not the downgrade",a:["confirmation"]},
+{t:"Representativeness bias",d:"Classifying new information by past experience and overweighting small samples; shorting September because most Septembers were down",a:["representativeness","representative bias"]},
+{t:"Illusion of control bias",d:"Believing you can influence outcomes you cannot; leads to overtrading, and turnover is negatively correlated with returns",a:["illusion of control","illusion control bias"]},
+{t:"Hindsight bias",d:"Believing past events were predictable when they were not; the 2000 and 2007 tops look obvious on a 20-year chart",a:["hindsight"]},
+{t:"Anchoring bias",d:"Relying on an initial piece of information, such as a $40 purchase price, that has no bearing on future price behavior",a:["anchoring"]},
+{t:"Mental accounting bias",d:"Treating equal sums differently by mental account, such as gambling with house money, despite the fungibility of money",a:["mental accounting"]},
+{t:"Framing bias",d:"Answering based on how a question is asked; a 70% chance of gain sounds better than a 30% chance of loss",a:["framing"]},
+{t:"Availability bias",d:"Judging probability by how easily an outcome is recalled; staying underinvested after a publicized crash",a:["availability"]},
+{t:"Recency bias",d:"Emphasizing recent events over longer-term evidence; performance chasing after a sharp rally",a:["recency"]},
+{t:"Loss aversion bias",d:"Disliking losses at about double the rate of enjoying equal gains; leads to the disposition effect",a:["loss aversion","loss-aversion"]},
+{t:"Disposition effect",d:"Holding losing positions too long and selling winners too early, a consequence of loss aversion"},
+{t:"Overconfidence bias",d:"Unwarranted faith in one's own reasoning; underestimating risk, overestimating expected value, poor diversification",a:["overconfidence"]},
+{t:"Self-attribution bias",d:"Taking too much credit for successes (self-enhancing) and blaming others for failures (self-protecting); intensifies overconfidence",a:["self attribution","attribution bias"]},
+{t:"Self-control bias",d:"Failing to pursue long-term goals because short-term satisfaction wins; too much portfolio risk, too much borrowing",a:["self control"]},
+{t:"Status quo bias",d:"Doing nothing instead of making a change because the default is comfortable; failure to rebalance",a:["status quo"]},
+{t:"Endowment bias",d:"Valuing an asset more simply because you own it; reluctance to sell inherited or familiar holdings",a:["endowment","endowment effect"]},
+{t:"Regret aversion bias",d:"Avoiding a decision for fear it will turn out poorly; leads to herding into popular assets and inaction",a:["regret aversion"]},
+{t:"Market anomaly",d:"Apparent deviation from the efficient market hypothesis with persistent abnormal returns predictable in direction",a:["market anomalies","anomaly","anomalies"]},
+{t:"Momentum",d:"Anomaly in which future price behavior correlates with the recent past, usually for about two years before mean reversion"},
+{t:"Value stocks",d:"High book-to-market equity, low P/E, and low price-to-dividend ratios; Fama and French found they outperformed growth over long periods",a:["value","value stock"]},
+{t:"Halo effect",d:"Extending a favorable evaluation of certain characteristics to others; a case of representativeness bias",a:["halo"]},
+{t:"Jack Black",d:"Case-study head trader whose bad mood framed his decision to dump the position and who blamed Les (attribution bias)",a:["jack"]},
+{t:"Les Smith",d:"Case-study technical analyst who clung to his bullish semiconductor call (regret aversion) and his faith in Moore's Law (overconfidence)",a:["les"]}
+],
+4:[
+{t:"Primary trend",d:"The major bull or bear movement, lasting a year or longer and often several years; it cannot be manipulated"},
+{t:"Secondary trend",d:"A countertrend correction or rally lasting weeks to months that retraces 33% to 66% of the primary move",a:["intermediate trend","secondary reaction"]},
+{t:"Minor trend",d:"Day-to-day fluctuations lasting days to weeks, treated as noise"},
+{t:"Confirmation",d:"Both averages reach new highs or new lows together on a closing basis; the critical word in Dow Theory"},
+{t:"Non-confirmation",d:"One average makes a new closing high or low and the other does not; an early warning of trend weakening",a:["divergence","nonconfirmation"]},
+{t:"Accumulation",d:"First bull-market phase: informed investors buy value while pessimism from the bear market lingers",a:["accumulation phase"]},
+{t:"Public participation",d:"Second phase of a primary trend: the move becomes visible, a wider range of investors joins, longest phase with the largest advance",a:["public participation phase","big move"]},
+{t:"Excess",d:"Third bull-market phase: optimism turns to speculation, valuations get elevated, better-informed buyers distribute into public demand",a:["distribution","excess phase","distribution phase"]},
+{t:"Distribution",d:"First bear-market phase: smart money sells after a long advance while news and confidence still look favorable",a:["distribution phase"]},
+{t:"Despair",d:"Third bear-market phase: fear-driven liquidation without regard to valuation, while contrarians begin to accumulate",a:["panic","panic despair","despair phase","lack of interest","panic phase"]},
+{t:"Charles Dow",d:"Father of modern technical analysis; created the first stock index and wrote the Wall Street Journal observations later formalized as Dow Theory",a:["dow","charles henry dow"]},
+{t:"Robert Rhea",d:"Author of Dow Theory (1932), which refined the theory into three hypotheses",a:["rhea"]},
+{t:"May 26, 1896",d:"Date the first Dow Jones Industrial Average appeared in the Wall Street Journal, with 12 stocks",a:["1896","may 26 1896"]},
+{t:"July 3, 1884",d:"Date Dow published his first stock index: a price-weighted average of 9 railroads and 2 industrials",a:["1884","july 3 1884"]},
+{t:"Dow Jones Transportation Average",d:"The average that originally had to confirm a signal from the Dow Jones Industrial Average",a:["djta","transportation average","transports","dow jones transports","railroad average"]},
+{t:"Closing price",d:"The only price recognized in Dow Theory; confirmation ignores intraday moves",a:["close","closing prices","closes"]},
+{t:"Volume",d:"A secondary confirmation that should expand in the direction of the primary trend; price trend and confirmation override it"},
+{t:"Validation",d:"What Dow Theory is more about than prediction"},
+{t:"Brown, Goetzmann, and Kumar",d:"Journal of Finance authors whose neural-network test found Dow Theory beat buy-and-hold by about 2% per year from 1929 to 1998 with less risk",a:["brown goetzmann kumar","brown goetzmann and kumar","goetzmann","brown"]},
+{t:"Fixed income",d:"Where the Dow Theory study moved money when the signal turned bearish",a:["fixed income instruments","bonds","fixed-income"]},
+{t:"Signals lag",d:"The main criticism of Dow Theory: investors act after tops and bottoms, which reduces profits but also reduces risk",a:["lag","lagging signals","lagging"]},
+{t:"Golden Spike",d:"May 10, 1869 ceremony at Promontory Summit, Utah that completed the first transcontinental railroad; the telegraph flashed DONE",a:["the golden spike","promontory summit"]},
+{t:"Price-weighted average",d:"How Dow's original index was constructed: higher-priced stocks carry more weight",a:["price weighted","price-weighted","price weighted average"]},
+{t:"50%",d:"The typical retracement of a secondary trend against the primary move",a:["50","50 percent","half"]}
+],
+5:[
+{t:"Homma Munehisa",d:"Early 18th century Japanese trader who plotted rice prices and invented the candlestick chart",a:["homma","munehisa homma","munehisa"]},
+{t:"Joseph de la Vega",d:"17th century Amsterdam author of Confusion of Confusions, the first book on the Amsterdam Stock Exchange",a:["de la vega","vega"]},
+{t:"Gustave Le Bon",d:"Late 19th century French author of The Crowd: A Study of the Popular Mind, a seminal work on crowd psychology",a:["le bon","lebon"]},
+{t:"Richard Wyckoff",d:"Outlined the price cycle phases: accumulation, markup, distribution, markdown",a:["wyckoff"]},
+{t:"Edwin Lefevre",d:"Author of Reminiscences of a Stock Operator (1923), which features Jesse Livermore",a:["lefevre"]},
+{t:"Ralph Nelson Elliott",d:"Published The Wave Principle in the 1930s, introducing Elliott Waves and Fibonacci relationships",a:["elliott","ralph elliott","r n elliott"]},
+{t:"Leonard P. Ayres",d:"Pioneered stock market breadth and is the father of the Advance/Decline Line",a:["ayres","leonard ayres"]},
+{t:"Lyman M. Lowry",d:"Developed the Buying Power and Selling Pressure Indexes",a:["lowry","lyman lowry"]},
+{t:"Garfield Drew",d:"Popularized odd lot activity as a speculative sentiment measure",a:["drew"]},
+{t:"Edwards and Magee",d:"Authors of Technical Analysis of Stock Trends (1948), which catalogs chart patterns and price activity",a:["edwards magee","edwards & magee","magee"]},
+{t:"Humphrey Neil",d:"Author of The Art of Contrary Thinking (1954)",a:["neil","neill","humphrey neill"]},
+{t:"Norman Fosback",d:"Author of Stock Market Logic (1976), detailing indicators and systematic approaches",a:["fosback"]},
+{t:"Martin Zweig",d:"Author of Winning on Wall Street (1986), which popularized phrases like The trend is your friend",a:["zweig"]},
+{t:"David R. Aronson",d:"Author of Evidence-Based Technical Analysis (2007), applying statistical rigor to trading signals",a:["aronson","david aronson"]},
+{t:"Perry J. Kaufman",d:"Author of Trading Systems and Methods (2013), integrating TA with behavioral finance and neural networks",a:["kaufman","perry kaufman"]},
+{t:"Thomas R. DeMark",d:"Introduced mechanized approaches and custom indicators; won the CMT Annual Award in 2020",a:["demark","tom demark","thomas demark"]},
+{t:"Richard W. Schabacker",d:"Published foundational books on technical analysis and market theory in the 1920s and 30s",a:["schabacker","richard schabacker"]},
+{t:"Identification",d:"The first function of technical analysis: describing past and present price action"},
+{t:"Forecasting",d:"The second function of technical analysis: inferring future price action on the assumption that patterns repeat"},
+{t:"Information analysis",d:"Forecasting approach that forms a market opinion from newspapers, magazines, and online bulletins"},
+{t:"Intrinsic value",d:"What the fundamentalist tries to determine from financial statements and accounts",a:["true value"]},
+{t:"Strong-form EMH",d:"Argument that the market discounts all information, so the price has already adjusted and profiting from it is futile",a:["strong form emh","strong form efficient market hypothesis","efficient market hypothesis","emh","strong form"]},
+{t:"Random walk",d:"Argument that all market action is random and chart patterns arise out of pure chance",a:["random walk process","random walk theory"]},
+{t:"Fractal",d:"Property of markets that lets technical analysis apply across all markets, instruments, and timeframes in the same way"},
+{t:"Sereno S. Pratt",d:"Defined technical position in 1912 as the study of stock supply, operator activity, and money availability",a:["pratt","sereno pratt"]},
+{t:"Liquidity",d:"What determines whether an instrument is useful for technical analysis; thin markets give false breakouts"},
+{t:"Index",d:"Tradeable instrument type defined as a mathematical average of a basket of assets"},
+{t:"Exchange-traded products",d:"Tradeable instrument type: baskets of assets trading as a single security",a:["etps","etp","etf","etfs","exchange traded products"]},
+{t:"Put/call ratio",d:"Option-market statistic (with implied volatility and open interest) that reveals sentiment and positioning",a:["put call ratio","put to call ratio","put-call ratio"]}
+],
+6:[
+{t:"Uptrend",d:"Higher peaks (highs) and higher troughs (lows)"},
+{t:"Downtrend",d:"Lower peaks (highs) and lower troughs (lows)"},
+{t:"Trading range",d:"Peaks and troughs at the same relative level, bounded by support and resistance; also called consolidation or a rectangle formation",a:["sideways trend","consolidation","congestion area","rectangle","flat trend","range"]},
+{t:"Resistance",d:"The highest point of a rise, where sellers overwhelm buyers",a:["resistance point","resistance level"]},
+{t:"Support",d:"A trough where a decline reversed, where buyers overwhelm sellers",a:["support point","support level"]},
+{t:"Resistance zone",d:"More than one resistance point at roughly the same price",a:["zone"]},
+{t:"Polarity",d:"When broken, previous support becomes resistance and previous resistance becomes support",a:["role reversal","support becomes resistance"]},
+{t:"Breakout trading",d:"Probably the most profitable and reliable strategy when faced with a trading range: positions go on once price leaves the range",a:["breakout","trading the breakout"]},
+{t:"Mean reversion",d:"Range trading between support and resistance; risky and expensive because of transaction costs",a:["range trading","mean reversion trading"]},
+{t:"Channel trading",d:"Trading a range defined by trend lines, only in the direction of the trend"},
+{t:"Regression line",d:"A best-fit line for the price data derived from linear regression, sometimes with standard deviation bands",a:["linear regression","linear regression line","best fit line"]},
+{t:"Trend line",d:"A line drawn by eye with a ruler through at least two support or two resistance points, whose purpose is to signal a change in trend",a:["trendline"]},
+{t:"Fan lines",d:"Decelerating trend lines that are broken and redrawn to each new support; practitioners expect at most three before a reversal",a:["fan line","decelerating trend lines","decelerating trend line","fan"]},
+{t:"Accelerating trend line",d:"A trend line that must be adjusted continually as prices curve upward or downward during a speculative bubble or panic",a:["accelerating trendline","accelerating"]},
+{t:"Channel line",d:"A line parallel to the trend line on the opposite side of price, defining a channel"},
+{t:"Internal trend line",d:"A trend line that cuts through the price bars to capture the center of the move",a:["internal trendline"]},
+{t:"Pullback",d:"A retracement that occurs after a downward breakout"},
+{t:"Throwback",d:"A retracement that occurs after an upward breakout"},
+{t:"Whipsaw",d:"A false signal when price crosses a trend line or moving average and then reverses",a:["whipsaws"]},
+{t:"Logarithmic scale",d:"Chart scale on which a trend line represents a percentage change rather than a point change; needed when prices move beyond a 20% to 40% range",a:["log scale","semi-logarithmic scale","semi log scale","semilog","logarithmic"]},
+{t:"Martin Pring",d:"Wrote in 2002 that the art of technical analysis is to identify trend changes at an early stage and hold until the weight of the evidence says the trend has reversed",a:["pring"]},
+{t:"45 degrees",d:"The angle at which point-and-figure bullish support and bearish resistance lines are drawn",a:["45","45 degree","forty five degrees"]},
+{t:"Round numbers",d:"Price levels where the tendency to buy and sell increases",a:["round number"]},
+{t:"Three",d:"The maximum number of fan lines practitioners expect before a reversal in direction",a:["3","three fan lines"]},
+{t:"Imbalance of demand and supply",d:"What a trending price tells us exists in the market",a:["supply and demand imbalance","imbalance","imbalance of supply and demand","demand and supply imbalance"]}
+],
+7:[
+{t:"Line chart",d:"The most basic chart: closing prices connected by a continuous line; especially useful for long-term trends",a:["line"]},
+{t:"Bar chart",d:"Chart showing high, low, and close (and sometimes open) as a floating vertical line; also called a vertical line chart",a:["bar","ohlc chart","hlc chart","vertical line chart","ohlc"]},
+{t:"Candlestick chart",d:"Chart with a real body between open and close and thin shadows to the high and low; always includes the open",a:["candlestick","candlesticks","candle chart"]},
+{t:"Point-and-figure chart",d:"Chart that records only price changes exceeding a box size and ignores time entirely",a:["point and figure","p&f","pf chart","point and figure chart","p and f"]},
+{t:"Range",d:"The difference between the high and low price in any bar"},
+{t:"Real body",d:"The box on a candlestick that represents the opening and closing prices",a:["body"]},
+{t:"Shadow",d:"The thin vertical line on a candlestick representing the price extremes of the session",a:["wick","shadows","wicks","shadow or wick"]},
+{t:"Doji",d:"A candlestick that forms when the open and close are virtually equal"},
+{t:"Arithmetic scale",d:"Chart scale on which equal vertical distance represents the same price interval, so 1 to 2 looks like 100 to 101",a:["linear scale","arithmetic","linear"]},
+{t:"Semi-logarithmic scale",d:"Chart scale on which equal vertical distance represents the same percentage change; the rule of thumb for multi-year charts or moves over 20%",a:["log scale","logarithmic scale","semi log scale","logarithmic","semilog"]},
+{t:"Equivolume",d:"Chart whose boxes run from low to high with a width that measures volume, so the horizontal axis is not scaled in time",a:["equivolume chart","equi-volume"]},
+{t:"Volume bar chart",d:"Chart in which one bar forms after a preset number of shares trade, such as 1,000,000",a:["volume bars","volume bar","volume-scaled chart","volume scaled chart","volume scaled"]},
+{t:"Tick bar chart",d:"Chart in which a new bar forms after a fixed number of trades, regardless of size",a:["tick chart","tick bars","tick bar"]},
+{t:"Range bar chart",d:"Chart in which each bar covers a fixed price range, such as $0.50, and a new bar forms only after price moves the full amount",a:["range bars","range bar"]},
+{t:"Data interval",d:"The term for the units or intervals on the x-axis of a chart",a:["interval"]},
+{t:"Julie Dahlquist",d:"CMT who wrote that at its root technical analysis is the study of price, and charts are tools for gathering and recording that information",a:["dahlquist"]},
+{t:"Jack Schwager",d:"Author of Technical Analysis (1996), which lists the benefits of charts: price history, volatility, timing, money management, and more",a:["schwager"]},
+{t:"Sentiment",d:"Folk-history reason for the closing price's importance: the price at which traders had to sleep with their positions"},
+{t:"Capital requirements",d:"Folk-history reason for the closing price's importance: it is used to calculate margin status and calls for capital",a:["margin","capital requirement"]},
+{t:"Potential top",d:"What a price advance halting on high volume suggests",a:["top","a top"]},
+{t:"Potential bottom",d:"What a price decline halting on high volume suggests",a:["bottom","a bottom"]},
+{t:"Area chart",d:"Line chart variant with the area under the line filled, common on financial television",a:["area"]},
+{t:"Box size",d:"The minimum price move a point-and-figure chart records",a:["box"]},
+{t:"20%",d:"Price movement beyond which many analysts find a logarithmic scale more useful than an arithmetic scale",a:["20","20 percent","twenty percent"]},
+{t:"Multi-y-axis chart",d:"Chart that places two series with very different price levels, such as the DJIA and S&P 500, on one chart using two vertical scales",a:["multi y axis chart","multi y-axes chart","multi y axes","dual axis chart","two y axes"]}
+],
+8:[
+{t:"Simple moving average",d:"The average price over a specific number of periods, giving every period the same weight",a:["sma","simple ma"]},
+{t:"Linearly weighted moving average",d:"Moving average that multiplies the newest price by N, the next by N minus 1, and so on, then divides by the sum of the multipliers",a:["lwma","wma","weighted moving average","linear weighted moving average"]},
+{t:"Exponential moving average",d:"Moving average that keeps all past data and weights the most recent price by 2 divided by (periods + 1), reducing lag",a:["ema","exponential ma"]},
+{t:"Drop-off effect",d:"The jump in a simple moving average when an old price with a large change leaves the calculation; the EMA was created to avoid it",a:["drop off effect","dropoff effect","drop off"]},
+{t:"2 / (N + 1)",d:"The formula for the EMA weighting multiplier",a:["2/(n+1)","2/(periods+1)","2 divided by n plus 1","2/(time periods+1)","two over n plus one"]},
+{t:"18.18%",d:"The weighting applied to the most recent price in a 10-period EMA",a:["18.18","0.1818",".1818","18 percent"]},
+{t:"9.52%",d:"The weighting applied to the most recent price in a 20-period EMA",a:["9.52","0.0952",".0952"]},
+{t:"Geometric moving average",d:"A simple moving average of percent changes between bars, used mostly for indexes and data with extreme price variation",a:["gma","geometric ma"]},
+{t:"Triangular moving average",d:"A moving average of a moving average: an SMA, then an SMA with half the period length",a:["triangular ma","tma"]},
+{t:"Whipsaw",d:"A false crossover signal, common when moving average strategies are used in a sideways market",a:["whipsaws"]},
+{t:"Bullish crossover",d:"A shorter-term moving average crossing above a longer-term moving average",a:["golden cross","crossing above","bullish cross"]},
+{t:"Bearish crossover",d:"A shorter-term moving average crossing below a longer-term moving average",a:["death cross","crossing below","bearish cross"]},
+{t:"Moving average ribbon",d:"Multiple moving averages with varying look-back periods plotted on the same chart",a:["ribbon","ma ribbon"]},
+{t:"+DM",d:"Positive directional movement: occurs when today's high exceeds yesterday's high",a:["plus dm","positive dm","positive directional movement","plus directional movement","+ dm"]},
+{t:"-DM",d:"Negative directional movement: occurs when today's low is below yesterday's low",a:["minus dm","negative dm","negative directional movement","minus directional movement","- dm"]},
+{t:"Inside day",d:"A day whose range is completely within the previous day's range; directional movement is recorded as zero"},
+{t:"Outside day",d:"A day that exceeds both the previous high and low; the greater difference wins and is recorded"},
+{t:"ADX",d:"Average Directional Index: measures trend strength regardless of direction",a:["average directional index","adx line"]},
+{t:"Directional Movement Indicator",d:"+DI and -DI together: smoothed directional movement divided by ATR, measuring trend direction",a:["dmi","di","plus di and minus di","+di and -di","directional indicators"]},
+{t:"Average True Range",d:"The 14-day volatility measure that +DM and -DM are divided by to build the directional indicators",a:["atr","true range"]},
+{t:"Welles Wilder",d:"Creator of the directional movement system, who compared each day's trading range with the previous day's to measure trend",a:["wilder","j welles wilder"]},
+{t:"Below 20",d:"ADX reading that generally indicates a weak trend or sideways market",a:["under 20","20","less than 20","below 20 25"]},
+{t:"Above 40",d:"ADX reading that indicates a strong trend",a:["40","over 40","greater than 40"]},
+{t:"Percentage envelope",d:"Bands a fixed percentage above and below a moving average; they do not adjust for changing volatility",a:["envelope","envelopes","percentage envelopes"]},
+{t:"Bollinger Bands",d:"A 20-day SMA with bands 2 standard deviations away, which widen in volatile periods and shrink in stable ones",a:["bollinger","bollinger band"]},
+{t:"Keltner Band",d:"Bands built from a 10-day SMA of the typical price plus or minus the 10-day SMA of the bar range",a:["keltner","keltner bands","keltner channel"]},
+{t:"Typical price",d:"(close + high + low) / 3, the input for Keltner Bands"},
+{t:"Donchian Channel",d:"The highest high and lowest low over a lookback period, commonly 20 days; a breakout above or below is the trade signal",a:["donchian","donchian channels"]},
+{t:"Stop-and-reverse",d:"Trading system in which an opposite-channel breakout closes the existing position and opens one in the new direction",a:["sar","stop and reverse"]},
+{t:"Stage 2 uptrend",d:"Where 98% of big winning stocks made the largest portion of their gain",a:["stage 2","stage two uptrend","stage two"]},
+{t:"Mean reversion",d:"The tendency of prices to return to their average, used to spot price extremes with the ratio of close to the 10-day SMA",a:["reversion to the mean","mean reverting"]},
+{t:"Trailing stop",d:"What a 50-day SMA became in the Medivation example once it caught up to the breakeven point, replacing the original stop loss",a:["trailing stop loss","stop"]}
+]};
+
+const L = {ch:1, lvl:{}, queue:[], idx:0, round:1, right:0, wrong:0, phase:"q", missed:[], last:null};
+const LKEY = c=>"ta-learn-ch"+c;
+function lload(c){L.ch=c;L.lvl={};L.round=1;try{const s=JSON.parse(localStorage.getItem(LKEY(c))||"null");if(s&&s.lvl){L.lvl=s.lvl;L.round=s.round||1}}catch(e){}CARDS[c].forEach((_,i)=>{if(L.lvl[i]===undefined)L.lvl[i]=0});buildRound()}
+function lsave(){try{localStorage.setItem(LKEY(L.ch),JSON.stringify({lvl:L.lvl,round:L.round}))}catch(e){}}
+function buildRound(){const n=CARDS[L.ch].length;const pool=[];for(let i=0;i<n;i++)if(L.lvl[i]<2)pool.push(i);
+  const lv0=shuffle(pool.filter(i=>L.lvl[i]===0)),lv1=shuffle(pool.filter(i=>L.lvl[i]===1));
+  L.queue=lv0.concat(lv1).slice(0,7);L.idx=0;L.right=0;L.wrong=0;L.missed=[];L.phase=pool.length?"q":"done";L.last=null;renderLearn()}
+function norm(s){return String(s).toLowerCase().replace(/[’']/g,"").replace(/[^a-z0-9%+\-\/ ]/g," ").replace(/\s+/g," ").trim().replace(/^(the|a|an) /,"")}
+function lev(a,b){const m=a.length,n=b.length;if(!m)return n;if(!n)return m;let p=Array.from({length:n+1},(_,j)=>j);for(let i=1;i<=m;i++){let c=[i];for(let j=1;j<=n;j++)c[j]=Math.min(p[j]+1,c[j-1]+1,p[j-1]+(a[i-1]===b[j-1]?0:1));p=c}return p[n]}
+function matches(card,ans){const x=norm(ans);if(!x)return false;const cands=[card.t].concat(card.a||[]).map(norm);
+  return cands.some(c=>c===x||(c.length>=5&&lev(c,x)<=Math.max(1,Math.floor(c.length*0.2))))}
+function ltally(){const n=CARDS[L.ch].length;let m=0,f=0;for(let i=0;i<n;i++){if(L.lvl[i]===2)m++;else if(L.lvl[i]===1)f++}
+  $("#l-m").textContent=m;$("#l-f").textContent=f;$("#l-n").textContent=n-m-f;$("#l-r").textContent=L.round;$("#l-bar").style.width=(100*(m+0.5*f)/n)+"%"}
+function renderLearn(){ltally();const card=$("#lcard");card.className="lcard";const cards=CARDS[L.ch];
+  if(L.phase==="done"){card.innerHTML=`<div class="lsum"><h2>Chapter ${L.ch} mastered</h2><p class="hint">All ${cards.length} terms answered correctly twice in a row. Reset the chapter to run it again, or move to the next chapter.</p><div class="actions"><button class="btn" id="l-again">Start over</button></div></div>`;$("#l-again").onclick=()=>{resetChapter()};return}
+  if(L.phase==="summary"){const miss=[...new Set(L.missed)];card.innerHTML=`<div class="lsum"><h2>Round ${L.round} done: ${L.right} right, ${L.wrong} missed</h2>${miss.length?`<p class="hint">Still working on:</p><ul>${miss.map(i=>`<li><b>${cards[i].t}</b>: ${cards[i].d}</li>`).join("")}</ul>`:`<p class="hint">Clean round.</p>`}<div class="actions"><button class="btn" id="l-next">Continue to round ${L.round+1}</button></div></div>`;
+    $("#l-next").onclick=()=>{L.round++;lsave();buildRound();window.scrollTo({top:$("#learn").offsetTop-10,behavior:"smooth"})};return}
+  const i=L.queue[L.idx],c=cards[i],mode=L.lvl[i]===0?"mc":"write";
+  let h=`<div class="lkind"><span>${mode==="mc"?"Pick the term":"Type the term"} · ${L.idx+1} of ${L.queue.length}</span><span>${L.lvl[i]===0?"New":"Familiar"} · Ch ${L.ch} ${CH_NAMES[L.ch]}</span></div><p class="ldef">${c.d}</p>`;
+  if(L.phase==="q"){
+    if(mode==="mc"){const others=shuffle(cards.map((_,k)=>k).filter(k=>k!==i)).slice(0,3);const opts=shuffle([i].concat(others));
+      h+=`<div class="lopts">`+opts.map(k=>`<button class="lopt" data-pick="${k}">${cards[k].t}</button>`).join("")+`</div><p class="hint">Keys <kbd>1</kbd> to <kbd>4</kbd> pick an option.</p>`}
+    else{h+=`<div class="lwrite"><input id="l-in" autocomplete="off" autocapitalize="off" spellcheck="false" aria-label="Your answer" placeholder="Type the term"><button class="btn" id="l-go">Answer</button><button class="btn ghost" id="l-dk">Don't know</button></div><p class="hint">Close spellings count. Press <kbd>Enter</kbd> to answer.</p>`}
+    card.innerHTML=h;
+    card.querySelectorAll("[data-pick]").forEach(b=>b.onclick=()=>grade(+b.dataset.pick===i,b.textContent));
+    const inp=$("#l-in");if(inp){inp.focus();$("#l-go").onclick=()=>grade(matches(c,inp.value),inp.value);$("#l-dk").onclick=()=>grade(false,"");inp.onkeydown=e=>{if(e.key==="Enter")grade(matches(c,inp.value),inp.value)}}
+  }else{
+    const ok=L.last.ok;card.classList.add(ok?"right":"wrong");
+    if(mode==="mc"){const opts=L.last.opts;h+=`<div class="lopts">`+opts.map(k=>`<button class="lopt ${k===i?"is-right":(cards[k].t===L.last.given?"is-wrong":"")}" disabled>${cards[k].t}</button>`).join("")+`</div>`}
+    else{h+=`<div class="lwrite"><input id="l-in" disabled value="${esc(L.last.given)}" aria-label="Your answer"></div>`}
+    h+=`<div class="lans ${ok?"good":"bad"}"><b>${ok?"Correct":"Not quite"}</b> · ${c.t}: ${c.d}</div><div class="actions"><button class="btn" id="l-cont">Continue</button>${(!ok&&mode==="write"&&L.last.given)?`<button class="btn ghost" id="l-override">I was right</button>`:""}</div>`;
+    card.innerHTML=h;$("#l-cont").focus();$("#l-cont").onclick=advance;const ov=$("#l-override");if(ov)ov.onclick=()=>{L.lvl[i]=Math.min(2,L.lvl[i]+1);L.right++;L.wrong--;L.missed=L.missed.filter(k=>k!==i);lsave();advance()};
+    document.onkeydown=e=>{if(e.key==="Enter"&&L.phase==="fb"){document.onkeydown=null;advance()}}
+  }
+}
+function grade(ok,given){const i=L.queue[L.idx];const opts=[...$("#lcard").querySelectorAll("[data-pick]")].map(b=>+b.dataset.pick);
+  if(ok){L.lvl[i]=Math.min(2,L.lvl[i]+1);L.right++}else{L.lvl[i]=0;L.wrong++;L.missed.push(i);if(L.queue.indexOf(i,L.idx+1)<0)L.queue.push(i)}
+  lsave();L.last={ok,given,opts};L.phase="fb";renderLearn()}
+function advance(){document.onkeydown=null;L.idx++;L.phase=L.idx<L.queue.length?"q":"summary";renderLearn()}
+function resetChapter(){L.lvl={};CARDS[L.ch].forEach((_,i)=>L.lvl[i]=0);L.round=1;lsave();buildRound()}
+$("#l-reset").onclick=()=>{const b=$("#l-reset");if(b.dataset.arm){delete b.dataset.arm;b.textContent="Reset this chapter";resetChapter()}else{b.dataset.arm="1";b.textContent="Click again to confirm reset";setTimeout(()=>{delete b.dataset.arm;b.textContent="Reset this chapter"},4000)}};
+document.addEventListener("keydown",e=>{if(document.body.classList.contains("learning")&&L.phase==="q"&&/^[1-4]$/.test(e.key)&&!$("#l-in")){const b=$("#lcard").querySelectorAll("[data-pick]")[+e.key-1];if(b)b.click()}});
+(function(){const row=$("#learnChapRow");CH.forEach(c=>{const b=document.createElement("button");b.className="chip";b.id="lc-"+c;b.textContent="Ch "+c+" · "+CH_NAMES[c];b.setAttribute("aria-pressed",c===L.ch);b.onclick=()=>{row.querySelectorAll(".chip").forEach(x=>x.setAttribute("aria-pressed",x===b));lload(c)};row.appendChild(b)})})();
+function setSection(sec){document.body.classList.toggle("learning",sec==="learn");$("#learn").hidden=sec!=="learn";document.querySelectorAll("[data-sec]").forEach(b=>b.setAttribute("aria-pressed",b.dataset.sec===sec));if(sec==="learn"&&!L.queue.length&&L.phase==="q")lload(L.ch)}
+document.querySelectorAll("[data-sec]").forEach(b=>b.onclick=()=>setSection(b.dataset.sec));
+(function(){const m=/^#learn([1-8])?$/.exec(location.hash||"");if(m){if(m[1]){L.ch=+m[1];document.querySelectorAll("#learnChapRow .chip").forEach(x=>x.setAttribute("aria-pressed",x.id==="lc-"+m[1]))}setSection("learn")}else{lload(L.ch)}})();
+</script>
